@@ -23,6 +23,7 @@ int aLEDNum3 = 0;
 unsigned long lastTriggerTime = 0;
 
 
+
 pinduinoext nggPinduno(aLEDNum1, aLEDNum2, aLEDNum3, "Nano");
 
 int bg_on = 1; // attract effect
@@ -33,6 +34,8 @@ String color = "white";
 
 const int potPin = A6; // Potentiometer pin
 int brightness = 255;  // Initial brightness
+int currentbrightness = 255;
+int brightnesschangethreshold = 5;
 
 void setup() {
     Serial.begin(115200);
@@ -41,6 +44,7 @@ void setup() {
     nggPinduno.adrLED3()->clear();
     nggPinduno.pinState()->reset();
     pinMode(potPin, INPUT);
+    nggPinduno.adrLED1()->setBrightness(currentbrightness);
 }
 
 void loop() {
@@ -125,12 +129,17 @@ boolean isDelayOver(){
 void readPotentiometer() {
     int potValue = analogRead(potPin); // Read potentiometer (0-1023)
     brightness = map(potValue, 0, 1023, 0, 255); // Scale to 0-255
-    nggPinduno.adrLED1()->setBrightness(brightness); // Apply brightness
-
+    if(abs(currentbrightness - brightness) > brightnesschangethreshold){
+      if(brightness = 0){ //0 could lead to odd behaviour
+        brightness = 1;  
+      }
+      nggPinduno.adrLED1()->setBrightness(brightness); // Apply brightness
+      currentbrightness = brightness;
+    }
     DEBUG_PRINT("Potentiometer: ");
     DEBUG_PRINT(potValue);
     DEBUG_PRINT(" | Brightness: ");
-    DEBUG_PRINTLN(brightness);
+    DEBUG_PRINTLN(currentbrightness);
 }
 
 void background() {
