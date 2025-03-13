@@ -5,9 +5,23 @@
 
 #include "pinduinoext.h"
 
+#ifdef DEBUG == 1
+#define DEBUG_PRINT(x) Serial.print(x)
+#define DEBUG_PRINTDEC(x) Serial.print(x, DEC)
+#define DEBUG_PRINTLN(x) Serial.println(x)
+#else
+#define DEBUG_PRINT(x)
+#define DEBUG_PRINTDEC(x)
+#define DEBUG_PRINTLN(x)
+#endif
+
+#define DELAYTIME 100
+
 int aLEDNum1 = 34; // left ramp
 int aLEDNum2 = 0;  // right ramp
 int aLEDNum3 = 0;
+unsigned long lastTriggerTime = 0;
+
 
 pinduinoext nggPinduno(aLEDNum1, aLEDNum2, aLEDNum3, "Nano");
 
@@ -48,75 +62,75 @@ void loop() {
     }
 }
 
+
+
+void checkPinStates() {
+    static int trigger = 0;
+
+    if (isDelayOver()) { // Ensure DELAYTIMEms delay between checks
+        if (nggPinduno.pinState()->J126(12)) {
+            nggPinduno.adrLED1()->color("blue");
+            trigger = 1;
+        }
+        else if (nggPinduno.pinState()->J126(11)) {
+            nggPinduno.adrLED1()->color("red");
+            trigger = 1;
+        }
+        else if (nggPinduno.pinState()->J126(10)) {
+            nggPinduno.adrLED1()->fadeOut(50);
+            nggPinduno.adrLED1()->bullet2Color("green", "red", 20, 2, 1);
+            trigger = 1;
+        }
+        else if (nggPinduno.pinState()->J126(9)) {
+            nggPinduno.adrLED1()->fadeOut(50);
+            nggPinduno.adrLED1()->bulletFromPoint2Color("white", "green", 17, 5, 17);
+            trigger = 1;
+        }
+        else if (nggPinduno.pinState()->J126(7)) {
+            nggPinduno.adrLED1()->fadeOut(50);
+            nggPinduno.adrLED1()->bulletFromPoint2Color("green", "white", 17, 5, 17);
+            trigger = 1;
+        }
+        else if (nggPinduno.pinState()->J126(6)) {
+            nggPinduno.adrLED1()->color("green");
+            trigger = 1;
+        }
+        else if (nggPinduno.pinState()->J126(5)) {
+            nggPinduno.adrLED1()->color("red");
+            trigger = 1;
+        }
+        else if (nggPinduno.pinState()->J126(4)) {
+            nggPinduno.adrLED1()->color("blue");
+            trigger = 1;
+        }
+
+        if (trigger) {
+            nggPinduno.pinState()->reset();
+            bg_on = 0;
+            timeLastEvent = millis();
+            trigger = 0;
+        }
+    }
+}
+
+boolean isDelayOver(){
+  boolean delayOver = false;
+  if(millis() - lastTriggerTime >= DELAYTIME){
+    delayOver = true;  
+    lastTriggerTime = millis();
+  }
+  return delayOver;
+}
 // Function to read potentiometer value and set brightness
 void readPotentiometer() {
     int potValue = analogRead(potPin); // Read potentiometer (0-1023)
     brightness = map(potValue, 0, 1023, 0, 255); // Scale to 0-255
     nggPinduno.adrLED1()->setBrightness(brightness); // Apply brightness
 
-    Serial.print("Potentiometer: ");
-    Serial.print(potValue);
-    Serial.print(" | Brightness: ");
-    Serial.println(brightness);
-}
-
-void checkPinStates() {
-    int trigger = 0;
-
-    if (nggPinduno.pinState()->J126(12)) {
-        nggPinduno.adrLED1()->color("blue");
-        delay(100);
-        trigger = 1;
-    }
-
-    if (nggPinduno.pinState()->J126(11)) {
-        nggPinduno.adrLED1()->color("red");
-        delay(100);
-        trigger = 1;
-    }
-
-    if (nggPinduno.pinState()->J126(10)) {
-        nggPinduno.adrLED1()->fadeOut(50);
-        nggPinduno.adrLED1()->bullet2Color("green", "red", 20, 2, 1);
-        trigger = 1;
-    }
-
-    if (nggPinduno.pinState()->J126(9)) {
-        nggPinduno.adrLED1()->fadeOut(50);
-        nggPinduno.adrLED1()->bulletFromPoint2Color("white", "green", 17, 5, 17);
-        trigger = 1;
-    }
-
-    if (nggPinduno.pinState()->J126(7)) {
-        nggPinduno.adrLED1()->fadeOut(50);
-        nggPinduno.adrLED1()->bulletFromPoint2Color("green", "white", 17, 5, 17);
-        trigger = 1;
-    }
-
-    if (nggPinduno.pinState()->J126(6)) {
-        nggPinduno.adrLED1()->color("green");
-        delay(50);
-        trigger = 1;
-    }
-
-    if (nggPinduno.pinState()->J126(5)) {
-        nggPinduno.adrLED1()->color("red");
-        delay(50);
-        trigger = 1;
-    }
-
-    if (nggPinduno.pinState()->J126(4)) {
-        nggPinduno.adrLED1()->color("blue");
-        delay(50);
-        trigger = 1;
-    }
-
-    if (trigger) {
-        nggPinduno.pinState()->reset();
-        trigger = 0;
-        bg_on = 0;
-        timeLastEvent = millis();
-    }
+    DEBUG_PRINT("Potentiometer: ");
+    DEBUG_PRINT(potValue);
+    DEBUG_PRINT(" | Brightness: ");
+    DEBUG_PRINTLN(brightness);
 }
 
 void background() {
