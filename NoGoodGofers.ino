@@ -20,8 +20,8 @@
 // === Constants ===
 #define DELAYTIME 100
 #define IDLE_COLOR_FADE_TIME 200  // Smooth transition to idle color
-const unsigned long effectCooldown = 2000; // Cooldown after effect
 const unsigned long attractTimeout = 20000; // Time before returning to attract
+const unsigned long effectDuration = 2000; // Duration for simple effects (2 seconds)
 
 // === LED Configuration ===
 const int aLEDNum1 = 80; // left ramp
@@ -55,12 +55,13 @@ pinduinoext nggPinduno(aLEDNum1, aLEDNum2, aLEDNum3, "Nano");
 void setToIdleColor(bool fade = true);
 void handleAttractMode(bool newGame);
 void handleWhiteIdleMode(bool hadTrigger);
-void handleEffectActiveMode(bool hadTrigger);
+void handleEffectActiveMode();
 bool checkPinStates();
 bool isDelayOver();
 void readPotentiometer();
 void debugLEDState(const char* newState);
-bool checkForNewGame(); // Check for initial game start
+bool checkForNewGame();
+void handleSimpleEffect(const String& color);
 
 // === Setup ===
 void setup() {
@@ -79,8 +80,8 @@ void setup() {
 void loop() {
   readPotentiometer();
   nggPinduno.pinState()->update();
-  bool newGame = (!gameActive && checkForNewGame()); // Check before reset
-  bool hadTrigger = checkPinStates(); // May reset pins
+  bool newGame = (!gameActive && checkForNewGame());
+  bool hadTrigger = checkPinStates();
 
   switch (ledState) {
     case ATTRACT:
@@ -92,7 +93,7 @@ void loop() {
       break;
       
     case EFFECT_ACTIVE:
-      handleEffectActiveMode(hadTrigger);
+      handleEffectActiveMode();
       break;
   }
 }
@@ -111,33 +112,30 @@ bool checkForNewGame() {
 
 // === State Handlers ===
 void handleAttractMode(bool newGame) {
-  // Show attract animation
   nggPinduno.adrLED1()->sparkle(attractColor, 20);
   
-  // Randomly change attract color
   if (random(1000) == 0) {
     if (attractColor == "white") attractColor = "green";
     else if (attractColor == "green") attractColor = "blue";
     else attractColor = "white";
   }
 
-  // Transition to game mode on new game start
   if (newGame) {
-    ledState = EFFECT_ACTIVE; // Start with effect
-    effectStartTime = millis();
     gameActive = true;
-    debugLEDState("EFFECT_ACTIVE");
+    checkPinStates(); // Trigger initial effect immediately
+    ledState = WHITE_IDLE; // Go to idle after effect (complex) or set up simple effect
+    setToIdleColor();
+    timeLastEvent = millis();
+    debugLEDState("WHITE_IDLE");
   }
 }
 
 void handleWhiteIdleMode(bool hadTrigger) {
-  // Continuously maintain idle color
   setToIdleColor(false);
   
   if (hadTrigger) {
-    ledState = EFFECT_ACTIVE;
-    effectStartTime = millis();
-    debugLEDState("EFFECT_ACTIVE");
+    // Effect is already handled in checkPinStates()
+    timeLastEvent = millis();
   } 
   else if (millis() - timeLastEvent > attractTimeout) {
     ledState = ATTRACT;
@@ -147,8 +145,8 @@ void handleWhiteIdleMode(bool hadTrigger) {
   }
 }
 
-void handleEffectActiveMode(bool hadTrigger) {
-  if (!hadTrigger && (millis() - effectStartTime > effectCooldown)) {
+void handleEffectActiveMode() {
+  if (millis() - effectStartTime > effectDuration) {
     ledState = WHITE_IDLE;
     setToIdleColor();
     timeLastEvent = millis();
@@ -171,38 +169,38 @@ bool checkPinStates() {
 
   if (isDelayOver()) {
     if (nggPinduno.pinState()->J126(12)) {
-      nggPinduno.adrLED1()->color("blue");
+      handleSimpleEffect("blue");
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(11)) {
-      nggPinduno.adrLED1()->color("red");
+      handleSimpleEffect("red");
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(10)) {
       nggPinduno.adrLED1()->fadeOut(50);
-      nggPinduno.adrLED1()->bullet2Color("green", "red", 20, 2, 1);
+      nggPinduno.adrLED1()->bullet2Color("green", "red", 20, 2, 1); // Blocking
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(9)) {
       nggPinduno.adrLED1()->fadeOut(50);
-      nggPinduno.adrLED1()->bulletFromPoint2Color("white", "green", 17, 5, 17);
+      nggPinduno.adrLED1()->bulletFromPoint2Color("white", "green", 17, 5, 17); // Blocking
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(7)) {
       nggPinduno.adrLED1()->fadeOut(50);
-      nggPinduno.adrLED1()->bulletFromPoint2Color("green", "white", 17, 5, 17);
+      nggPinduno.adrLED1()->bulletFromPoint2Color("green", "white", 17, 5, 17); // Blocking
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(6)) {
-      nggPinduno.adrLED1()->color("green");
+      handleSimpleEffect("green");
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(5)) {
-      nggPinduno.adrLED1()->color("red");
+      handleSimpleEffect("red");
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(4)) {
-      nggPinduno.adrLED1()->color("blue");
+      handleSimpleEffect("blue");
       trigger = 1;
     }
 
@@ -210,10 +208,23 @@ bool checkPinStates() {
       nggPinduno.pinState()->reset();
       timeLastEvent = millis();
       trigger = 0;
+      if (ledState != EFFECT_ACTIVE) { // If not already in EFFECT_ACTIVE (simple effect)
+        ledState = WHITE_IDLE; // Return to idle after complex effect
+        setToIdleColor();
+        debugLEDState("WHITE_IDLE");
+      }
       return true;
     }
   }
   return false;
+}
+
+// === Simple Effect Handler ===
+void handleSimpleEffect(const String& color) {
+  nggPinduno.adrLED1()->color(color);
+  effectStartTime = millis();
+  ledState = EFFECT_ACTIVE;
+  debugLEDState("EFFECT_ACTIVE");
 }
 
 // === Delay Timer Check ===
@@ -231,7 +242,7 @@ void readPotentiometer() {
   brightness = map(potValue, 0, 1023, 0, 255);
   
   if (abs(currentBrightness - brightness) > brightnessChangeThreshold) {
-    brightness = constrain(brightness, 1, 255); // Ensure never 0
+    brightness = constrain(brightness, 1, 255);
     nggPinduno.adrLED1()->setBrightness(brightness);
     currentBrightness = brightness;
     DEBUG_PRINT("Brightness: ");
