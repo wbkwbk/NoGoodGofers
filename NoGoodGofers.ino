@@ -25,14 +25,16 @@ unsigned long lastTriggerTime = 0;
 bool gameActive = false;
 unsigned long lastEffectEndTime = 0;
 const unsigned long effectCooldown = 1000; // Time after effect before returning to white
+enum LEDState { ATTRACT, EFFECT_ACTIVE, FADING_TO_WHITE, WHITE_IDLE };
+LEDState ledState = ATTRACT;
+unsigned long stateChangeTime = 0;
 
 
 
 pinduinoext nggPinduno(aLEDNum1, aLEDNum2, aLEDNum3, "Nano");
 
-int bg_on = 1; // attract effect
 unsigned long timeLastEvent = 0; // time last event was last triggered
-int startChaseWaitTime = 20000; // Time before chase lights restart (1000 = 1 sec)
+int waitUntilStateChangeToAttractMode = 20000; // Time before chase lights restart (1000 = 1 sec)
 int bgWhiteTime = 50;
 String color = "white";
 
@@ -55,33 +57,43 @@ void setup() {
 
 void loop() {
     readPotentiometer();
+    nggPinduno.pinState()->update();
+    bool hadTrigger = checkPinStates();
 
-    if (!gameActive) {
-        // Attract Mode
-        background();
-        
-        // Check for game start trigger
-        nggPinduno.pinState()->update();
-        if (checkPinStates()) {
-            gameActive = true;
-            nggPinduno.adrLED1()->fadeInRGB(128, 128, 128, 500); // Fade to white
-        }
-    } 
-    else {
-        // Game Mode
-        nggPinduno.pinState()->update();
-        bool hadTrigger = checkPinStates();
-        
-        // If no recent triggers and effects are done, return to white
-        if (!hadTrigger && (millis() - lastEffectEndTime > effectCooldown)) {
-            nggPinduno.adrLED1()->colorRGB(128, 128, 128);
-        }
+    switch (ledState) {
+        case ATTRACT:
+            background();
+            if (hadTrigger) {
+                ledState = FADING_TO_WHITE;
+                stateChangeTime = millis();
+                nggPinduno.adrLED1()->fadeInRGB(128, 128, 128, FADETOWHITETIME);
+                gameActive = true;
+            }
+            break;
 
-        // Check for game end condition
-        if (millis() - timeLastEvent > startChaseWaitTime) {
-            gameActive = false;
-            nggPinduno.adrLED1()->fadeOut(500); // Smooth transition to attract
-        }
+        case FADING_TO_WHITE:
+            if (millis() - stateChangeTime >= FADETOWHITETIME) { // Wait for fade to complete
+                ledState = WHITE_IDLE;
+            }
+            break;
+
+        case WHITE_IDLE:
+            if (hadTrigger) {
+                ledState = EFFECT_ACTIVE;
+            } else if (millis() - timeLastEvent > waitUntilStateChangeToAttractMode) {
+                ledState = ATTRACT;
+                nggPinduno.adrLED1()->fadeOut(500);
+                gameActive = false;
+            }
+            break;
+
+        case EFFECT_ACTIVE:
+            if (!hadTrigger && (millis() - lastEffectEndTime > effectCooldown)) {
+                ledState = FADING_TO_WHITE;
+                stateChangeTime = millis();
+                nggPinduno.adrLED1()->fadeInRGB(128, 128, 128, 500);
+            }
+            break;
     }
 }
 
@@ -89,7 +101,6 @@ void loop() {
 
 bool checkPinStates() {
     static int trigger = 0;
-    bool result = false;
 
     if (isDelayOver()) { // Ensure DELAYTIMEms delay between checks
         if (nggPinduno.pinState()->J126(12)) {
@@ -130,13 +141,14 @@ bool checkPinStates() {
 
         if (trigger) {
             nggPinduno.pinState()->reset();
-            bg_on = 0;
             timeLastEvent = millis();
             trigger = 0;
-            result = true; // <-- SINGLE point where result is set
+            // Directly update state machine if needed
+            if (ledState == WHITE_IDLE) {
+                ledState = EFFECT_ACTIVE;
+            }
         }
     }
-    return result;
 }
 
 boolean isDelayOver(){
