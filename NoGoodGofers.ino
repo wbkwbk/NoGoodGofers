@@ -34,7 +34,7 @@ String color = "white";
 
 const int potPin = A6; // Potentiometer pin
 int brightness = 250;  // Initial brightness
-int currentbrightness = 255;
+int currentbrightness = 250;
 int brightnesschangethreshold = 5;
 
 void setup() {
