@@ -136,6 +136,7 @@ bool checkPinStates() {
             result = true; // <-- SINGLE point where result is set
         }
     }
+    return result;
 }
 
 boolean isDelayOver(){
