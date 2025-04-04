@@ -16,12 +16,15 @@
 #endif
 
 #define DELAYTIME 100
+#define FADETOWHITETIME 50
 
 int aLEDNum1 = 80; // left ramp
 int aLEDNum2 = 0;  // right ramp
 int aLEDNum3 = 0;
 unsigned long lastTriggerTime = 0;
-bool fadePending = false; // Global: Soll ein Fade ausgelöst werden?
+bool gameActive = false;
+unsigned long lastEffectEndTime = 0;
+const unsigned long effectCooldown = 1000; // Time after effect before returning to white
 
 
 
@@ -40,6 +43,7 @@ int brightnesschangethreshold = 5;
 
 void setup() {
     Serial.begin(115200);
+    gameActive = false;
     nggPinduno.adrLED1()->clear();
     nggPinduno.adrLED2()->clear();
     nggPinduno.adrLED3()->clear();
@@ -48,33 +52,44 @@ void setup() {
     nggPinduno.adrLED1()->setBrightness(currentbrightness);
 }
 
+
 void loop() {
     readPotentiometer();
 
-    if (bg_on) {
-        background(); // Attract-Mode: Blinken
+    if (!gameActive) {
+        // Attract Mode
+        background();
+        
+        // Check for game start trigger
+        nggPinduno.pinState()->update();
+        if (checkPinStates()) {
+            gameActive = true;
+            nggPinduno.adrLED1()->fadeInRGB(128, 128, 128, 500); // Fade to white
+        }
     } 
     else {
-        // Spielmodus
-        if (millis() - timeLastEvent > startChaseWaitTime) {
-            bg_on = 1; // Zurück zum Attract-Mode
-        }
+        // Game Mode
+        nggPinduno.pinState()->update();
+        bool hadTrigger = checkPinStates();
         
-        // Fade auslösen, wenn gewünscht (nur einmal!)
-        if (fadePending) {
-            nggPinduno.adrLED1()->fadeInRGB(128, 128, 128, 500);
-            fadePending = false; // Reset
+        // If no recent triggers and effects are done, return to white
+        if (!hadTrigger && (millis() - lastEffectEndTime > effectCooldown)) {
+            nggPinduno.adrLED1()->colorRGB(128, 128, 128);
+        }
+
+        // Check for game end condition
+        if (millis() - timeLastEvent > startChaseWaitTime) {
+            gameActive = false;
+            nggPinduno.adrLED1()->fadeOut(500); // Smooth transition to attract
         }
     }
-
-    nggPinduno.pinState()->update();
-    checkPinStates(); // Hier wird fadePending ggf. gesetzt
 }
 
 
 
-void checkPinStates() {
+bool checkPinStates() {
     static int trigger = 0;
+    bool result = false;
 
     if (isDelayOver()) { // Ensure DELAYTIMEms delay between checks
         if (nggPinduno.pinState()->J126(12)) {
@@ -118,7 +133,7 @@ void checkPinStates() {
             bg_on = 0;
             timeLastEvent = millis();
             trigger = 0;
-            fadePending = true; // Fade anfordern!
+            result = true; // <-- SINGLE point where result is set
         }
     }
 }
