@@ -21,6 +21,7 @@ int aLEDNum1 = 80; // left ramp
 int aLEDNum2 = 0;  // right ramp
 int aLEDNum3 = 0;
 unsigned long lastTriggerTime = 0;
+bool fadePending = false; // Global: Soll ein Fade ausgelöst werden?
 
 
 
@@ -48,22 +49,26 @@ void setup() {
 }
 
 void loop() {
-    readPotentiometer(); // Read and adjust brightness
+    readPotentiometer();
 
     if (bg_on) {
-        background();
+        background(); // Attract-Mode: Blinken
+    } 
+    else {
+        // Spielmodus
+        if (millis() - timeLastEvent > startChaseWaitTime) {
+            bg_on = 1; // Zurück zum Attract-Mode
+        }
+        
+        // Fade auslösen, wenn gewünscht (nur einmal!)
+        if (fadePending) {
+            nggPinduno.adrLED1()->fadeInRGB(128, 128, 128, 500);
+            fadePending = false; // Reset
+        }
     }
 
     nggPinduno.pinState()->update();
-    checkPinStates();
-
-    if (millis() - timeLastEvent > startChaseWaitTime) {
-        bg_on = 1;
-    }
-    
-    if (millis() - timeLastEvent > bgWhiteTime && !bg_on) {
-        nggPinduno.adrLED1()->colorRGB(128, 128, 128);
-    }
+    checkPinStates(); // Hier wird fadePending ggf. gesetzt
 }
 
 
@@ -113,6 +118,7 @@ void checkPinStates() {
             bg_on = 0;
             timeLastEvent = millis();
             trigger = 0;
+            fadePending = true; // Fade anfordern!
         }
     }
 }
@@ -130,7 +136,7 @@ void readPotentiometer() {
     int potValue = analogRead(potPin); // Read potentiometer (0-1023)
     brightness = map(potValue, 0, 1023, 0, 255); // Scale to 0-255
     if(abs(currentbrightness - brightness) > brightnesschangethreshold){
-      if(brightness = 0){ //0 could lead to odd behaviour
+      if(brightness == 0){ //0 could lead to odd behaviour
         brightness = 1;  
       }
       //nggPinduno.adrLED1()->setBrightness(brightness); // Apply brightness
