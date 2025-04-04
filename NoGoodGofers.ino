@@ -17,7 +17,7 @@
 
 #define DELAYTIME 100
 
-int aLEDNum1 = 34; // left ramp
+int aLEDNum1 = 80; // left ramp
 int aLEDNum2 = 0;  // right ramp
 int aLEDNum3 = 0;
 unsigned long lastTriggerTime = 0;
@@ -33,7 +33,7 @@ int bgWhiteTime = 50;
 String color = "white";
 
 const int potPin = A6; // Potentiometer pin
-int brightness = 255;  // Initial brightness
+int brightness = 250;  // Initial brightness
 int currentbrightness = 255;
 int brightnesschangethreshold = 5;
 
@@ -133,7 +133,7 @@ void readPotentiometer() {
       if(brightness = 0){ //0 could lead to odd behaviour
         brightness = 1;  
       }
-      nggPinduno.adrLED1()->setBrightness(brightness); // Apply brightness
+      //nggPinduno.adrLED1()->setBrightness(brightness); // Apply brightness
       currentbrightness = brightness;
     }
     DEBUG_PRINT("Potentiometer: ");
