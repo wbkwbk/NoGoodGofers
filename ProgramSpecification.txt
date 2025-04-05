@@ -1,0 +1,16 @@
+Here is the specification
+The game has 3 states
+- S1: attract if no game is runing
+- S2: running game - no effect triggered
+- S3: running game - effect is triggered with according led animation
+      simple effects like setting a color to red, green blue etc. stays for 2 seconds
+	  complex effects are blocking and run as long as it takes
+	  
+in S2 I want the led stripe to constantly show a 128,128,128 color
+
+The program starts in Attact mode
+The program shows the attract color 3 seconds then changes it.
+it cycles through each attract color exactly once in random order before repeating
+those are the attract colors
+dark green, light green, dark blue, light blue, purple, please represent the colors for the pinduino library in rgb values
+

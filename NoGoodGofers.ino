@@ -19,13 +19,37 @@
 
 // === Constants ===
 #define DELAYTIME 100
-#define IDLE_COLOR_FADE_TIME 200  // Smooth transition to idle color
-const unsigned long attractTimeout = 20000; // Time before returning to attract
-const unsigned long effectDuration = 2000; // Duration for simple effects (2 seconds)
+#define IDLE_COLOR_FADE_TIME 200
+const unsigned long attractTimeout = 20000;
+const unsigned long effectDuration = 2000;
+const unsigned long attractColorChangeInterval = 3000;
+
+// RGB Color Constants
+const uint8_t DARK_GREEN_R = 0;
+const uint8_t DARK_GREEN_G = 100;
+const uint8_t DARK_GREEN_B = 0;
+
+const uint8_t LIGHT_GREEN_R = 144;
+const uint8_t LIGHT_GREEN_G = 238;
+const uint8_t LIGHT_GREEN_B = 144;
+
+const uint8_t DARK_BLUE_R = 0;
+const uint8_t DARK_BLUE_G = 0;
+const uint8_t DARK_BLUE_B = 139;
+
+const uint8_t LIGHT_BLUE_R = 173;
+const uint8_t LIGHT_BLUE_G = 216;
+const uint8_t LIGHT_BLUE_B = 230;
+
+const uint8_t PURPLE_R = 128;
+const uint8_t PURPLE_G = 0;
+const uint8_t PURPLE_B = 128;
+
+const int NUM_ATTRACT_COLORS = 5;
 
 // === LED Configuration ===
-const int aLEDNum1 = 80; // left ramp
-const int aLEDNum2 = 0;  // right ramp
+const int aLEDNum1 = 80;
+const int aLEDNum2 = 0;
 const int aLEDNum3 = 0;
 const uint8_t idleColorR = 128;
 const uint8_t idleColorG = 128;
@@ -39,8 +63,17 @@ LEDState ledState = ATTRACT;
 unsigned long lastTriggerTime = 0;
 unsigned long timeLastEvent = 0;
 unsigned long effectStartTime = 0;
-String attractColor = "white";
+unsigned long lastAttractColorChange = 0;
+uint8_t currentAttractR = DARK_GREEN_R;
+uint8_t currentAttractG = DARK_GREEN_G;
+uint8_t currentAttractB = DARK_GREEN_B;
+String attractColorName = "darkgreen";
 bool gameActive = false;
+
+// Color cycling variables
+bool colorUsed[NUM_ATTRACT_COLORS] = {false};
+int availableColors[NUM_ATTRACT_COLORS];
+int numAvailableColors = 0;
 
 // === Brightness Control ===
 const int potPin = A6;
@@ -61,7 +94,11 @@ bool isDelayOver();
 void readPotentiometer();
 void debugLEDState(const char* newState);
 bool checkForNewGame();
-void handleSimpleEffect(const String& color);
+void handleSimpleEffect(uint8_t r, uint8_t g, uint8_t b);
+void changeAttractColor();
+void setAttractEffect();
+void resetColorCycle();
+int getNextRandomColor();
 
 // === Setup ===
 void setup() {
@@ -74,6 +111,13 @@ void setup() {
   nggPinduno.pinState()->reset();
   nggPinduno.adrLED1()->setBrightness(250);
   pinMode(potPin, INPUT);
+  
+  // Start in attract mode with initial color
+  ledState = ATTRACT;
+  resetColorCycle();
+  changeAttractColor();
+  setAttractEffect();
+  debugLEDState("ATTRACT");
 }
 
 // === Main Loop ===
@@ -98,6 +142,88 @@ void loop() {
   }
 }
 
+void resetColorCycle() {
+  for (int i = 0; i < NUM_ATTRACT_COLORS; i++) {
+    colorUsed[i] = false;
+  }
+  numAvailableColors = NUM_ATTRACT_COLORS;
+  DEBUG_PRINTLN("Color cycle reset - all colors available");
+}
+
+int getNextRandomColor() {
+  if (numAvailableColors == 0) {
+    resetColorCycle();
+  }
+
+  int availableIndex = 0;
+  for (int i = 0; i < NUM_ATTRACT_COLORS; i++) {
+    if (!colorUsed[i]) {
+      availableColors[availableIndex++] = i;
+    }
+  }
+
+  int selectedIndex = random(numAvailableColors);
+  int selectedColor = availableColors[selectedIndex];
+  
+  colorUsed[selectedColor] = true;
+  numAvailableColors--;
+  
+  return selectedColor;
+}
+
+void changeAttractColor() {
+  int colorChoice = getNextRandomColor();
+  
+  switch(colorChoice) {
+    case 0: // Dark Green
+      currentAttractR = DARK_GREEN_R;
+      currentAttractG = DARK_GREEN_G;
+      currentAttractB = DARK_GREEN_B;
+      attractColorName = "darkgreen";
+      break;
+    case 1: // Light Green
+      currentAttractR = LIGHT_GREEN_R;
+      currentAttractG = LIGHT_GREEN_G;
+      currentAttractB = LIGHT_GREEN_B;
+      attractColorName = "lightgreen";
+      break;
+    case 2: // Dark Blue
+      currentAttractR = DARK_BLUE_R;
+      currentAttractG = DARK_BLUE_G;
+      currentAttractB = DARK_BLUE_B;
+      attractColorName = "darkblue";
+      break;
+    case 3: // Light Blue
+      currentAttractR = LIGHT_BLUE_R;
+      currentAttractG = LIGHT_BLUE_G;
+      currentAttractB = LIGHT_BLUE_B;
+      attractColorName = "lightblue";
+      break;
+    case 4: // Purple
+      currentAttractR = PURPLE_R;
+      currentAttractG = PURPLE_G;
+      currentAttractB = PURPLE_B;
+      attractColorName = "purple";
+      break;
+  }
+  DEBUG_PRINT("Attract color changed to: ");
+  DEBUG_PRINTLN(attractColorName);
+  DEBUG_PRINT("Colors remaining: ");
+  DEBUG_PRINTLN(numAvailableColors);
+}
+
+void setAttractEffect() {
+  // Set base color
+  nggPinduno.adrLED1()->colorRGB(currentAttractR, currentAttractG, currentAttractB);
+  // Add sparkle effect with a brighter version of the current color
+  nggPinduno.adrLED1()->sparkleRGB(
+    min(255, currentAttractR * 1.2),
+    min(255, currentAttractG * 1.2),
+    min(255, currentAttractB * 1.2),
+    20 // 20% chance of sparkle
+  );
+}
+
 // === Check for Initial Game Start ===
 bool checkForNewGame() {
   return (nggPinduno.pinState()->J126(12) ||
@@ -112,18 +238,16 @@ bool checkForNewGame() {
 
 // === State Handlers ===
 void handleAttractMode(bool newGame) {
-  nggPinduno.adrLED1()->sparkle(attractColor, 20);
-  
-  if (random(1000) == 0) {
-    if (attractColor == "white") attractColor = "green";
-    else if (attractColor == "green") attractColor = "blue";
-    else attractColor = "white";
+  if (millis() - lastAttractColorChange > attractColorChangeInterval) {
+    changeAttractColor();
+    setAttractEffect();
+    lastAttractColorChange = millis();
   }
 
   if (newGame) {
     gameActive = true;
     checkPinStates(); // Trigger initial effect immediately
-    ledState = WHITE_IDLE; // Go to idle after effect (complex) or set up simple effect
+    ledState = WHITE_IDLE;
     setToIdleColor();
     timeLastEvent = millis();
     debugLEDState("WHITE_IDLE");
@@ -134,7 +258,6 @@ void handleWhiteIdleMode(bool hadTrigger) {
   setToIdleColor(false);
   
   if (hadTrigger) {
-    // Effect is already handled in checkPinStates()
     timeLastEvent = millis();
   } 
   else if (millis() - timeLastEvent > attractTimeout) {
@@ -169,11 +292,11 @@ bool checkPinStates() {
 
   if (isDelayOver()) {
     if (nggPinduno.pinState()->J126(12)) {
-      handleSimpleEffect("blue");
+      handleSimpleEffect(0, 0, 255); // Blue
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(11)) {
-      handleSimpleEffect("red");
+      handleSimpleEffect(255, 0, 0); // Red
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(10)) {
@@ -192,15 +315,15 @@ bool checkPinStates() {
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(6)) {
-      handleSimpleEffect("green");
+      handleSimpleEffect(0, 255, 0); // Green
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(5)) {
-      handleSimpleEffect("red");
+      handleSimpleEffect(255, 0, 0); // Red
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(4)) {
-      handleSimpleEffect("blue");
+      handleSimpleEffect(0, 0, 255); // Blue
       trigger = 1;
     }
 
@@ -220,8 +343,8 @@ bool checkPinStates() {
 }
 
 // === Simple Effect Handler ===
-void handleSimpleEffect(const String& color) {
-  nggPinduno.adrLED1()->color(color);
+void handleSimpleEffect(uint8_t r, uint8_t g, uint8_t b) {
+  nggPinduno.adrLED1()->colorRGB(r, g, b);
   effectStartTime = millis();
   ledState = EFFECT_ACTIVE;
   debugLEDState("EFFECT_ACTIVE");
