@@ -76,7 +76,7 @@ int availableColors[NUM_ATTRACT_COLORS];
 int numAvailableColors = 0;
 
 // === Brightness Control ===
-const int potPin = A6;
+const int potPin = A5;
 int brightness = 250;
 int currentBrightness = 250;
 const int brightnessChangeThreshold = 5;
