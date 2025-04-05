@@ -1,5 +1,5 @@
 // Eric Lyons 2018
-// Updated by ChatGPT 2025
+// Updated by Martin Ruff & Grok 3 & Deepseek & ChatGPT 2025
 // Interfaced for pinduino shield v0.2 and v0.3
 // Uses pinduino library
 
