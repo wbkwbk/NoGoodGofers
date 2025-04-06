@@ -1,8 +1,8 @@
 #include <Adafruit_NeoPixel.h>
-#include <AddressableStrip.h> // Direct include from Pinduino
+#include "AddressableStripCorrected.h"
 
 #define LED_PIN 2
-#define NUM_LEDS 80
+#define NUM_LEDS 160
 const unsigned long EFFECT_DURATION = 5000;
 
 AddressableStrip *strip = new AddressableStrip(NUM_LEDS, LED_PIN, nullptr);
@@ -18,7 +18,7 @@ void setup() {
 }
 
 void loop() {
-  // 1. colorRGB(int r, int g, int b)
+  // 1. colorRGB - Red
   Serial.println("Effect: colorRGB - Red");
   strip->colorRGB(255, 0, 0);
   strip->strip()->show();
@@ -26,7 +26,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 2. colorRGB(int r, int g, int b)
+  // 2. colorRGB - Green
   Serial.println("Effect: colorRGB - Green");
   strip->colorRGB(0, 255, 0);
   strip->strip()->show();
@@ -34,7 +34,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 3. color(String color)
+  // 3. color - Blue
   Serial.println("Effect: color - Blue");
   strip->color("blue");
   strip->strip()->show();
@@ -42,7 +42,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 4. clear()
+  // 4. clear - White to Black
   Serial.println("Effect: clear - White to Black");
   strip->colorRGB(255, 255, 255);
   strip->strip()->show();
@@ -51,7 +51,7 @@ void loop() {
   strip->strip()->show();
   delay(EFFECT_DURATION - 1000);
 
-  // 5. fadeIn(String color, float time)
+  // 5. fadeIn - Yellow
   Serial.println("Effect: fadeIn - Yellow");
   strip->fadeIn("yellow", 1000);
   strip->strip()->show();
@@ -59,7 +59,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 6. fadeInRGB(int r, int g, int b, float time)
+  // 6. fadeInRGB - Cyan
   Serial.println("Effect: fadeInRGB - Cyan");
   strip->fadeInRGB(0, 255, 255, 1000);
   strip->strip()->show();
@@ -67,7 +67,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 7. fadeRGB2RGB(float r1, float g1, float b1, float r2, float g2, float b2, float time)
+  // 7. fadeRGB2RGB - Red to Blue
   Serial.println("Effect: fadeRGB2RGB - Red to Blue");
   strip->fadeRGB2RGB(255, 0, 0, 0, 0, 255, 1000);
   strip->strip()->show();
@@ -75,7 +75,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 8. fadeColor2Color(String color1, String color2, float time)
+  // 8. fadeColor2Color - Green to Purple
   Serial.println("Effect: fadeColor2Color - Green to Purple");
   strip->fadeColor2Color("green", "purple", 1000);
   strip->strip()->show();
@@ -83,7 +83,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 9. fadeOut(float steps)
+  // 9. fadeOut - White to Black
   Serial.println("Effect: fadeOut - White to Black");
   strip->colorRGB(255, 255, 255);
   strip->strip()->show();
@@ -92,7 +92,7 @@ void loop() {
   strip->strip()->show();
   delay(EFFECT_DURATION - 1000);
 
-  // 10. RGBBand(int pos, int r, int g, int b, int span)
+  // 10. RGBBand - Orange
   Serial.println("Effect: RGBBand - Orange");
   strip->RGBBand(NUM_LEDS / 2, 255, 165, 0, 10);
   strip->strip()->show();
@@ -100,7 +100,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 11. RGBBandCont(int pos, int r, int g, int b, int span, int startLED, int endLED)
+  // 11. RGBBandCont - Purple
   Serial.println("Effect: RGBBandCont - Purple");
   strip->RGBBandCont(NUM_LEDS / 2, 255, 0, 255, 10, 0, NUM_LEDS);
   strip->strip()->show();
@@ -108,7 +108,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 12. chase2RGB(float r1, float g1, float b1, float r2, float g2, float b2, float span, int time, int dir)
+  // 12. chase2RGB - Red to Green
   Serial.println("Effect: chase2RGB - Red to Green");
   strip->chase2RGB(255, 0, 0, 0, 255, 0, 5, 20, 1);
   strip->strip()->show();
@@ -116,7 +116,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 13. chase2Color(String color1, String color2, float span, int time, int dir)
+  // 13. chase2Color - Blue to Yellow
   Serial.println("Effect: chase2Color - Blue to Yellow");
   strip->chase2Color("blue", "yellow", 5, 20, 1);
   strip->strip()->show();
@@ -124,7 +124,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 14. chaseRGB(int r, int g, int b, int span, int time, int dir)
+  // 14. chaseRGB - Purple
   Serial.println("Effect: chaseRGB - Purple");
   strip->chaseRGB(255, 0, 255, 5, 20, 1);
   strip->strip()->show();
@@ -132,7 +132,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 15. chase(String color, float span, int time, int dir)
+  // 15. chase - Cyan
   Serial.println("Effect: chase - Cyan");
   strip->chase("cyan", 5, 20, 1);
   strip->strip()->show();
@@ -140,7 +140,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 16. chase2RGBFromPoint(int pos, float r1, float g1, float b1, float r2, float g2, float b2, int span, int time)
+  // 16. chase2RGBFromPoint - Red to Green
   Serial.println("Effect: chase2RGBFromPoint - Red to Green");
   strip->chase2RGBFromPoint(NUM_LEDS / 2, 255, 0, 0, 0, 255, 0, 5, 20);
   strip->strip()->show();
@@ -148,7 +148,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 17. chase2ColorFromPoint(int pos, String color1, String color2, int span, int time)
+  // 17. chase2ColorFromPoint - Blue to Yellow
   Serial.println("Effect: chase2ColorFromPoint - Blue to Yellow");
   strip->chase2ColorFromPoint(NUM_LEDS / 2, "blue", "yellow", 5, 20);
   strip->strip()->show();
@@ -156,7 +156,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 18. chase2RGBCont(float r1, float g1, float b1, float r2, float g2, float b2, float span, int time, int dir, int startLED, int endLED)
+  // 18. chase2RGBCont - Green to Purple
   Serial.println("Effect: chase2RGBCont - Green to Purple");
   strip->chase2RGBCont(0, 255, 0, 255, 0, 255, 5, 20, 1, 0, NUM_LEDS);
   strip->strip()->show();
@@ -164,7 +164,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 19. chase2ColorCont(String color1, String color2, float span, int time, int dir, int startLED, int endLED)
+  // 19. chase2ColorCont - Cyan to Orange
   Serial.println("Effect: chase2ColorCont - Cyan to Orange");
   strip->chase2ColorCont("cyan", "orange", 5, 20, 1, 0, NUM_LEDS);
   strip->strip()->show();
@@ -172,7 +172,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 20. chaseColorCont(String color, float span, int time, int dir, int startLED, int endLED)
+  // 20. chaseColorCont - Pink
   Serial.println("Effect: chaseColorCont - Pink");
   strip->chaseColorCont("pink", 5, 20, 1, 0, NUM_LEDS);
   strip->strip()->show();
@@ -180,7 +180,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 21. spreadInFromPoint2RGB(int pos, float r1, float g1, float b1, float r2, float g2, float b2, int time)
+  // 21. spreadInFromPoint2RGB - Red to Blue
   Serial.println("Effect: spreadInFromPoint2RGB - Red to Blue");
   strip->spreadInFromPoint2RGB(NUM_LEDS / 2, 255, 0, 0, 0, 0, 255, 1000);
   strip->strip()->show();
@@ -188,7 +188,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 22. spreadInFromPoint2Color(int pos, String color1, String color2, int time)
+  // 22. spreadInFromPoint2Color - Green to Yellow
   Serial.println("Effect: spreadInFromPoint2Color - Green to Yellow");
   strip->spreadInFromPoint2Color(NUM_LEDS / 2, "green", "yellow", 1000);
   strip->strip()->show();
@@ -196,7 +196,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 23. spreadInFromPointRGB(int pos, float r, float g, float b, int time)
+  // 23. spreadInFromPointRGB - Purple
   Serial.println("Effect: spreadInFromPointRGB - Purple");
   strip->spreadInFromPointRGB(NUM_LEDS / 2, 255, 0, 255, 1000);
   strip->strip()->show();
@@ -204,7 +204,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 24. spreadInFromPoint(int pos, String color, int time)
+  // 24. spreadInFromPoint - Cyan
   Serial.println("Effect: spreadInFromPoint - Cyan");
   strip->spreadInFromPoint(NUM_LEDS / 2, "cyan", 1000);
   strip->strip()->show();
@@ -212,7 +212,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 25. spreadOutFromPoint(int pos, float time)
+  // 25. spreadOutFromPoint - White fading out
   Serial.println("Effect: spreadOutFromPoint - White fading out");
   strip->colorRGB(255, 255, 255);
   strip->strip()->show();
@@ -220,7 +220,7 @@ void loop() {
   strip->strip()->show();
   delay(EFFECT_DURATION - 1000);
 
-  // 26. spreadOutToPoint(int pos, float time)
+  // 26. spreadOutToPoint - White fading to center
   Serial.println("Effect: spreadOutToPoint - White fading to center");
   strip->colorRGB(255, 255, 255);
   strip->strip()->show();
@@ -228,7 +228,7 @@ void loop() {
   strip->strip()->show();
   delay(EFFECT_DURATION - 1000);
 
-  // 27. explosionRGB(int pos, int r, int g, int b, int span)
+  // 27. explosionRGB - Orange
   Serial.println("Effect: explosionRGB - Orange");
   strip->explosionRGB(NUM_LEDS / 2, 255, 165, 0, 10);
   strip->strip()->show();
@@ -236,7 +236,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 28. explosion(int pos, String color, int span)
+  // 28. explosion - Purple
   Serial.println("Effect: explosion - Purple");
   strip->explosion(NUM_LEDS / 2, "purple", 10);
   strip->strip()->show();
@@ -244,7 +244,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 29. rainbow(int wait)
+  // 29. rainbow
   Serial.println("Effect: rainbow");
   strip->rainbow(20);
   strip->strip()->show();
@@ -252,7 +252,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 30. rainbowCycle(int wait)
+  // 30. rainbowCycle
   Serial.println("Effect: rainbowCycle");
   strip->rainbowCycle(20);
   strip->strip()->show();
@@ -260,7 +260,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 31. RGBBullet(int pos, int r, int g, int b, int span, int dir)
+  // 31. RGBBullet - Green
   Serial.println("Effect: RGBBullet - Green");
   strip->RGBBullet(NUM_LEDS / 2, 0, 255, 0, 10, 1);
   strip->strip()->show();
@@ -268,7 +268,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 32. RGBBulletCont(int pos, int r, int g, int b, int span, int dir)
+  // 32. RGBBulletCont - Blue
   Serial.println("Effect: RGBBulletCont - Blue");
   strip->RGBBulletCont(NUM_LEDS / 2, 0, 0, 255, 10, 1);
   strip->strip()->show();
@@ -276,7 +276,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 33. bulletP2P_2RGB(float r1, float g1, float b1, float r2, float g2, float b2, float span, int time, int dir, int start, int stop)
+  // 33. bulletP2P_2RGB - Red to Green
   Serial.println("Effect: bulletP2P_2RGB - Red to Green");
   strip->bulletP2P_2RGB(255, 0, 0, 0, 255, 0, 5, 20, 1, 0, NUM_LEDS);
   strip->strip()->show();
@@ -284,7 +284,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 34. bulletP2P_2Color(String color1, String color2, float span, int time, int dir, int start, int stop)
+  // 34. bulletP2P_2Color - Blue to Yellow
   Serial.println("Effect: bulletP2P_2Color - Blue to Yellow");
   strip->bulletP2P_2Color("blue", "yellow", 5, 20, 1, 0, NUM_LEDS);
   strip->strip()->show();
@@ -292,7 +292,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 35. bulletFromPoint2RGB(float r1, float g1, float b1, float r2, float g2, float b2, float span, int time, int start_pos)
+  // 35. bulletFromPoint2RGB - Green to Purple
   Serial.println("Effect: bulletFromPoint2RGB - Green to Purple");
   strip->bulletFromPoint2RGB(0, 255, 0, 255, 0, 255, 5, 20, NUM_LEDS / 2);
   strip->strip()->show();
@@ -300,7 +300,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 36. bulletFromPointRGB(int r, int g, int b, int span, int time, int start_pos)
+  // 36. bulletFromPointRGB - Cyan
   Serial.println("Effect: bulletFromPointRGB - Cyan");
   strip->bulletFromPointRGB(0, 255, 255, 5, 20, NUM_LEDS / 2);
   strip->strip()->show();
@@ -308,7 +308,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 37. bulletFromPoint(String color, float span, int time, int start_pos)
+  // 37. bulletFromPoint - Orange
   Serial.println("Effect: bulletFromPoint - Orange");
   strip->bulletFromPoint("orange", 5, 20, NUM_LEDS / 2);
   strip->strip()->show();
@@ -316,7 +316,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 38. bulletFromPoint2Color(String color1, String color2, float span, int time, int start_pos)
+  // 38. bulletFromPoint2Color - Red to Blue
   Serial.println("Effect: bulletFromPoint2Color - Red to Blue");
   strip->bulletFromPoint2Color("red", "blue", 5, 20, NUM_LEDS / 2);
   strip->strip()->show();
@@ -324,7 +324,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 39. bullet2RGB(float r1, float g1, float b1, float r2, float g2, float b2, float span, int time, int dir)
+  // 39. bullet2RGB - Yellow to Purple
   Serial.println("Effect: bullet2RGB - Yellow to Purple");
   strip->bullet2RGB(255, 255, 0, 255, 0, 255, 5, 20, 1);
   strip->strip()->show();
@@ -332,7 +332,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 40. bulletRGB(int r, int g, int b, int span, int time, int dir)
+  // 40. bulletRGB - Green
   Serial.println("Effect: bulletRGB - Green");
   strip->bulletRGB(0, 255, 0, 5, 20, 1);
   strip->strip()->show();
@@ -340,7 +340,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 41. bullet2Color(String color1, String color2, float span, int time, int dir)
+  // 41. bullet2Color - Cyan to Pink
   Serial.println("Effect: bullet2Color - Cyan to Pink");
   strip->bullet2Color("cyan", "pink", 5, 20, 1);
   strip->strip()->show();
@@ -348,7 +348,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 42. bullet(String color, float span, int time, int dir)
+  // 42. bullet - Yellow
   Serial.println("Effect: bullet - Yellow");
   strip->bullet("yellow", 5, 20, 1);
   strip->strip()->show();
@@ -356,7 +356,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 43. multiBullet2RGB(float r1, float g1, float b1, float r2, float g2, float b2, float span, int time, int dir, int num)
+  // 43. multiBullet2RGB - Red to Blue
   Serial.println("Effect: multiBullet2RGB - Red to Blue");
   strip->multiBullet2RGB(255, 0, 0, 0, 0, 255, 5, 20, 1, 3);
   strip->strip()->show();
@@ -364,7 +364,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 44. multiBulletRGB(int r, int g, int b, int span, int time, int dir, int num)
+  // 44. multiBulletRGB - Green
   Serial.println("Effect: multiBulletRGB - Green");
   strip->multiBulletRGB(0, 255, 0, 5, 20, 1, 3);
   strip->strip()->show();
@@ -372,7 +372,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 45. multiBullet(String color, float span, int time, int dir, int num)
+  // 45. multiBullet - Purple
   Serial.println("Effect: multiBullet - Purple");
   strip->multiBullet("purple", 5, 20, 1, 3);
   strip->strip()->show();
@@ -380,7 +380,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 46. multiBullet2Color(String color1, String color2, float span, int time, int dir, int num)
+  // 46. multiBullet2Color - Blue to Orange
   Serial.println("Effect: multiBullet2Color - Blue to Orange");
   strip->multiBullet2Color("blue", "orange", 5, 20, 1, 3);
   strip->strip()->show();
@@ -388,7 +388,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 47. Matrix2RGB(float r1, float g1, float b1, float r2, float g2, float b2, float span, int time, int dir)
+  // 47. Matrix2RGB - Green to Blue
   Serial.println("Effect: Matrix2RGB - Green to Blue");
   strip->Matrix2RGB(0, 255, 0, 0, 0, 255, 5, 20, 1);
   strip->strip()->show();
@@ -396,7 +396,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 48. Matrix2Color(String color1, String color2, float span, int time, int dir)
+  // 48. Matrix2Color - Red to Yellow
   Serial.println("Effect: Matrix2Color - Red to Yellow");
   strip->Matrix2Color("red", "yellow", 5, 20, 1);
   strip->strip()->show();
@@ -404,7 +404,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 49. RGBMatrix(int rows, int r, int g, int b, int span, int dir)
+  // 49. RGBMatrix - Cyan
   Serial.println("Effect: RGBMatrix - Cyan");
   strip->RGBMatrix(5, 0, 255, 255, 5, 1);
   strip->strip()->show();
@@ -412,7 +412,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 50. sparkleRGB(int r, int g, int b, int density, int speed)
+  // 50. sparkleRGB - Pink
   Serial.println("Effect: sparkleRGB - Pink");
   strip->sparkleRGB(255, 192, 203, 20, 50);
   strip->strip()->show();
@@ -420,7 +420,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 51. sparkle(String color, int density, int speed)
+  // 51. sparkle - Orange
   Serial.println("Effect: sparkle - Orange");
   strip->sparkle("orange", 20, 50);
   strip->strip()->show();
@@ -428,61 +428,55 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 52. dataStreamRGB(int r, int g, int b, int density, int speed, int dir)
+  // 52. dataStreamRGB - Blue
   Serial.println("Effect: dataStreamRGB - Blue");
-  for (int i = 0; i < 100; i++) {
-    strip->dataStreamRGB(0, 0, 255, 20, 50, 1);
-    strip->strip()->show();
-  }
+  strip->dataStreamRGB(0, 0, 255, 20, 50, 1);
+  strip->strip()->show();
+  delay(EFFECT_DURATION);
   strip->clear();
   strip->strip()->show();
 
-  // 53. dataStream(String color, int density, int speed, int dir)
+  // 53. dataStream - Green
   Serial.println("Effect: dataStream - Green");
-  for (int i = 0; i < 100; i++) {
-    strip->dataStream("green", 20, 50, 1);
-    strip->strip()->show();
-  }
+  strip->dataStream("green", 20, 50, 1);
+  strip->strip()->show();
+  delay(EFFECT_DURATION);
   strip->clear();
   strip->strip()->show();
 
-  // 54. dataStreamNoTailRGB(int r, int g, int b, int density, int speed, int dir)
+  // 54. dataStreamNoTailRGB - Red
   Serial.println("Effect: dataStreamNoTailRGB - Red");
-  for (int i = 0; i < 100; i++) {
-    strip->dataStreamNoTailRGB(255, 0, 0, 20, 50, 1);
-    strip->strip()->show();
-  }
+  strip->dataStreamNoTailRGB(255, 0, 0, 20, 50, 1);
+  strip->strip()->show();
+  delay(EFFECT_DURATION);
   strip->clear();
   strip->strip()->show();
 
-  // 55. dataStreamNoTail(String color, int density, int speed, int dir)
+  // 55. dataStreamNoTail - Yellow
   Serial.println("Effect: dataStreamNoTail - Yellow");
-  for (int i = 0; i < 100; i++) {
-    strip->dataStreamNoTail("yellow", 20, 50, 1);
-    strip->strip()->show();
-  }
+  strip->dataStreamNoTail("yellow", 20, 50, 1);
+  strip->strip()->show();
+  delay(EFFECT_DURATION);
   strip->clear();
   strip->strip()->show();
 
-  // 56. dataStreamNoTail2RGB(float r1, float g1, float b1, float r2, float g2, float b2, int density, int speed, int dir)
+  // 56. dataStreamNoTail2RGB - Cyan to Purple
   Serial.println("Effect: dataStreamNoTail2RGB - Cyan to Purple");
-  for (int i = 0; i < 100; i++) {
-    strip->dataStreamNoTail2RGB(0, 255, 255, 255, 0, 255, 20, 50, 1);
-    strip->strip()->show();
-  }
+  strip->dataStreamNoTail2RGB(0, 255, 255, 255, 0, 255, 20, 50, 1);
+  strip->strip()->show();
+  delay(EFFECT_DURATION);
   strip->clear();
   strip->strip()->show();
 
-  // 57. dataStreamNoTail2Color(String color1, String color2, int density, int speed, int dir)
+  // 57. dataStreamNoTail2Color - Red to Blue
   Serial.println("Effect: dataStreamNoTail2Color - Red to Blue");
-  for (int i = 0; i < 100; i++) {
-    strip->dataStreamNoTail2Color("red", "blue", 20, 50, 1);
-    strip->strip()->show();
-  }
+  strip->dataStreamNoTail2Color("red", "blue", 20, 50, 1);
+  strip->strip()->show();
+  delay(EFFECT_DURATION);
   strip->clear();
   strip->strip()->show();
 
-  // 58. equalizerRGB(float r1, float g1, float b1, float r2, float g2, float b2, int span, int spd, int tipFallDelaySpan, int dir, int nofade)
+  // 58. equalizerRGB - Green to Red
   Serial.println("Effect: equalizerRGB - Green to Red");
   strip->equalizerRGB(0, 255, 0, 255, 0, 0, 20, 50, 5, 1, 0);
   strip->strip()->show();
@@ -490,7 +484,7 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 59. equalizer(String color1, String color2, int span, int spd, int tipFallDelaySpan, int dir)
+  // 59. equalizer - Blue to Yellow
   Serial.println("Effect: equalizer - Blue to Yellow");
   strip->equalizer("blue", "yellow", 20, 50, 5, 1);
   strip->strip()->show();
@@ -498,16 +492,15 @@ void loop() {
   strip->clear();
   strip->strip()->show();
 
-  // 60. fire(int density, int speed)
+  // 60. fire - Red/Orange/Yellow
   Serial.println("Effect: fire - Red/Orange/Yellow");
-  for (int i = 0; i < 100; i++) {
-    strip->fire(20, 50);
-    strip->strip()->show();
-  }
+  strip->fire(20, 50);
+  strip->strip()->show();
+  delay(EFFECT_DURATION);
   strip->clear();
   strip->strip()->show();
 
-  // 61. meteorRain(int r, int g, int b, int meteorSize, int meteorTrailDecay, boolean meteorRandomDecay, int SpeedDelay)
+  // 61. meteorRain - White
   Serial.println("Effect: meteorRain - White");
   strip->meteorRain(255, 255, 255, 5, 64, true, 30);
   strip->strip()->show();
