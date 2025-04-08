@@ -7,6 +7,156 @@ const unsigned long EFFECT_DURATION = 5000;
 
 AddressableStrip *strip = new AddressableStrip(NUM_LEDS, LED_PIN, nullptr);
 
+// Structure to hold effect details
+struct Effect {
+  const char* name;
+  void (*function)();
+};
+
+// Function declarations for all effects
+void effectBullet() { strip->bullet("yellow", 5, 20, 1); }
+void effectBullet2Color() { strip->bullet2Color("cyan", "pink", 5, 20, 1); }
+void effectBullet2RGB() { strip->bullet2RGB(255, 255, 0, 255, 0, 255, 5, 20, 1); }
+void effectBulletFromPoint() { strip->bulletFromPoint("orange", 5, 20, NUM_LEDS / 2); }
+void effectBulletFromPoint2Color() { strip->bulletFromPoint2Color("red", "blue", 5, 20, NUM_LEDS / 2); }
+void effectBulletFromPoint2RGB() { strip->bulletFromPoint2RGB(0, 255, 0, 255, 0, 255, 5, 20, NUM_LEDS / 2); }
+void effectBulletFromPointRGB() { strip->bulletFromPointRGB(0, 255, 255, 5, 20, NUM_LEDS / 2); }
+void effectBulletP2P_2Color() { strip->bulletP2P_2Color("blue", "yellow", 5, 20, 1, 0, NUM_LEDS); }
+void effectBulletP2P_2RGB() { strip->bulletP2P_2RGB(255, 0, 0, 0, 255, 0, 5, 20, 1, 0, NUM_LEDS); }
+void effectBulletRGB() { strip->bulletRGB(0, 255, 0, 5, 20, 1); }
+void effectChase() { strip->chase("cyan", 5, 20, 1); }
+void effectChase2Color() { strip->chase2Color("blue", "yellow", 5, 20, 1); }
+void effectChase2ColorCont() { strip->chase2ColorCont("cyan", "orange", 5, 20, 1, 0, NUM_LEDS); }
+void effectChase2ColorFromPoint() { strip->chase2ColorFromPoint(NUM_LEDS / 2, "blue", "yellow", 5, 20); }
+void effectChase2RGB() { strip->chase2RGB(255, 0, 0, 0, 255, 0, 5, 20, 1); }
+void effectChase2RGBCont() { strip->chase2RGBCont(0, 255, 0, 255, 0, 255, 5, 20, 1, 0, NUM_LEDS); }
+void effectChase2RGBFromPoint() { strip->chase2RGBFromPoint(NUM_LEDS / 2, 255, 0, 0, 0, 255, 0, 5, 20); }
+void effectChaseColorCont() { strip->chaseColorCont("pink", 5, 20, 1, 0, NUM_LEDS); }
+void effectChaseRGB() { strip->chaseRGB(255, 0, 255, 5, 20, 1); }
+void effectClear() { strip->colorRGB(255, 255, 255); strip->strip()->show(); delay(1000); strip->clear(); }
+void effectColor() { strip->color("blue"); }
+void effectColorRGB() { strip->colorRGB(255, 0, 0); }
+void effectDataStream() { strip->dataStream("green", 20, 50, 1); }
+void effectDataStreamNoTail() { strip->dataStreamNoTail("yellow", 20, 50, 1); }
+void effectDataStreamNoTail2Color() { strip->dataStreamNoTail2Color("red", "blue", 20, 50, 1); }
+void effectDataStreamNoTail2RGB() { strip->dataStreamNoTail2RGB(0, 255, 255, 255, 0, 255, 20, 50, 1); }
+void effectDataStreamRGB() { strip->dataStreamRGB(0, 0, 255, 20, 50, 1); }
+void effectEqualizer() { strip->equalizer("blue", "yellow", 20, 50, 5, 1); }
+void effectEqualizerRGB() { strip->equalizerRGB(0, 255, 0, 255, 0, 0, 20, 50, 5, 1, 0); }
+void effectExplosion() { strip->explosion(NUM_LEDS / 2, "purple", 10); }
+void effectExplosionRGB() { strip->explosionRGB(NUM_LEDS / 2, 255, 165, 0, 10); }
+void effectFadeColor2Color() { strip->fadeColor2Color("green", "purple", 1000); }
+void effectFadeIn() { strip->fadeIn("yellow", 1000); }
+void effectFadeInRGB() { strip->fadeInRGB(0, 255, 255, 1000); }
+void effectFadeOut() { strip->colorRGB(255, 255, 255); strip->strip()->show(); delay(1000); strip->fadeOut(1000); }
+void effectFadeRGB2RGB() { strip->fadeRGB2RGB(255, 0, 0, 0, 0, 255, 1000); }
+//void effectFire() { strip->fire(20, 50); }
+void effectMatrix2Color() { strip->Matrix2Color("red", "yellow", 5, 20, 1); }
+void effectMatrix2RGB() { strip->Matrix2RGB(0, 255, 0, 0, 0, 255, 5, 20, 1); }
+//void effectMeteorRain() { strip->meteorRain(255, 255, 255, 5, 64, true, 30); }
+void effectMultiBullet() { strip->multiBullet("purple", 5, 20, 1, 3); }
+void effectMultiBullet2Color() { strip->multiBullet2Color("blue", "orange", 5, 20, 1, 3); }
+void effectMultiBullet2RGB() { strip->multiBullet2RGB(255, 0, 0, 0, 0, 255, 5, 20, 1, 3); }
+void effectMultiBulletRGB() { strip->multiBulletRGB(0, 255, 0, 5, 20, 1, 3); }
+void effectRainbow() { strip->rainbow(20); }
+void effectRainbowCycle() { strip->rainbowCycle(20); }
+void effectRGBBand() { strip->RGBBand(NUM_LEDS / 2, 255, 165, 0, 10); }
+void effectRGBBandCont() { strip->RGBBandCont(NUM_LEDS / 2, 255, 0, 255, 10, 0, NUM_LEDS); }
+void effectRGBBullet() { strip->RGBBullet(NUM_LEDS / 2, 0, 255, 0, 10, 1); }
+void effectRGBBulletCont() { strip->RGBBulletCont(NUM_LEDS / 2, 0, 0, 255, 10, 1); }
+void effectRGBMatrix() { strip->RGBMatrix(5, 0, 255, 255, 5, 1); }
+void effectSparkle() { strip->sparkle("orange", 20, 50); }
+void effectSparkleRGB() { strip->sparkleRGB(255, 192, 203, 20, 50); }
+void effectSpreadInFromPoint() { strip->spreadInFromPoint(NUM_LEDS / 2, "cyan", 1000); }
+void effectSpreadInFromPoint2Color() { strip->spreadInFromPoint2Color(NUM_LEDS / 2, "green", "yellow", 1000); }
+void effectSpreadInFromPoint2RGB() { strip->spreadInFromPoint2RGB(NUM_LEDS / 2, 255, 0, 0, 0, 0, 255, 1000); }
+void effectSpreadInFromPointRGB() { strip->spreadInFromPointRGB(NUM_LEDS / 2, 255, 0, 255, 1000); }
+void effectSpreadOutFromPoint() { strip->colorRGB(255, 255, 255); strip->strip()->show(); strip->spreadOutFromPoint(NUM_LEDS / 2, 1000); }
+void effectSpreadOutToPoint() { strip->colorRGB(255, 255, 255); strip->strip()->show(); strip->spreadOutToPoint(NUM_LEDS / 2, 1000); }
+// New effects from pinduino.cpp
+void effectChaseAllAdr2RGB() { strip->chase2RGB(255, 0, 0, 0, 0, 255, 5, 20, 1); } // Red to Blue chase
+void effectChaseAllAdrRGB() { strip->chaseRGB(0, 255, 0, 5, 20, 1); } // Green chase
+void effectFadeAllAdrColor2Color() { strip->fadeColor2Color("red", "yellow", 1000); } // Red to Yellow fade
+void effectFadeAllAdrIn() { strip->fadeIn("purple", 1000); } // Fade in Purple
+void effectFadeAllAdrOut() { strip->colorRGB(255, 255, 255); strip->strip()->show(); delay(1000); strip->fadeOut(1000); } // Fade out from White
+void effectFadeAllAdrRGB2RGB() { strip->fadeRGB2RGB(0, 255, 0, 255, 0, 0, 1000); } // Green to Red fade
+void effectSparkleAllAdr() { strip->sparkle("cyan", 20, 50); } // Cyan sparkle
+void effectSparkleAllAdrRGB() { strip->sparkleRGB(255, 165, 0, 20, 50); } // Orange sparkle
+
+// Array of all effects
+Effect effects[] = {
+  {"bullet", effectBullet},
+  {"bullet2Color", effectBullet2Color},
+  {"bullet2RGB", effectBullet2RGB},
+  {"bulletFromPoint", effectBulletFromPoint},
+  {"bulletFromPoint2Color", effectBulletFromPoint2Color},
+  {"bulletFromPoint2RGB", effectBulletFromPoint2RGB},
+  {"bulletFromPointRGB", effectBulletFromPointRGB},
+  {"bulletP2P_2Color", effectBulletP2P_2Color},
+  {"bulletP2P_2RGB", effectBulletP2P_2RGB},
+  {"bulletRGB", effectBulletRGB},
+  {"chase", effectChase},
+  {"chase2Color", effectChase2Color},
+  {"chase2ColorCont", effectChase2ColorCont},
+  {"chase2ColorFromPoint", effectChase2ColorFromPoint},
+  {"chase2RGB", effectChase2RGB},
+  {"chase2RGBCont", effectChase2RGBCont},
+  {"chase2RGBFromPoint", effectChase2RGBFromPoint},
+  {"chaseColorCont", effectChaseColorCont},
+  {"chaseRGB", effectChaseRGB},
+  {"clear", effectClear},
+  {"color", effectColor},
+  {"colorRGB", effectColorRGB},
+  {"dataStream", effectDataStream},
+  {"dataStreamNoTail", effectDataStreamNoTail},
+  {"dataStreamNoTail2Color", effectDataStreamNoTail2Color},
+  {"dataStreamNoTail2RGB", effectDataStreamNoTail2RGB},
+  {"dataStreamRGB", effectDataStreamRGB},
+  {"equalizer", effectEqualizer},
+  {"equalizerRGB", effectEqualizerRGB},
+  {"explosion", effectExplosion},
+  {"explosionRGB", effectExplosionRGB},
+  {"fadeColor2Color", effectFadeColor2Color},
+  {"fadeIn", effectFadeIn},
+  {"fadeInRGB", effectFadeInRGB},
+  {"fadeOut", effectFadeOut},
+  {"fadeRGB2RGB", effectFadeRGB2RGB},
+  //{"fire", effectFire},
+  {"Matrix2Color", effectMatrix2Color},
+  {"Matrix2RGB", effectMatrix2RGB},
+  //{"meteorRain", effectMeteorRain},
+  {"multiBullet", effectMultiBullet},
+  {"multiBullet2Color", effectMultiBullet2Color},
+  {"multiBullet2RGB", effectMultiBullet2RGB},
+  {"multiBulletRGB", effectMultiBulletRGB},
+  {"rainbow", effectRainbow},
+  {"rainbowCycle", effectRainbowCycle},
+  {"RGBBand", effectRGBBand},
+  {"RGBBandCont", effectRGBBandCont},
+  {"RGBBullet", effectRGBBullet},
+  {"RGBBulletCont", effectRGBBulletCont},
+  {"RGBMatrix", effectRGBMatrix},
+  {"sparkle", effectSparkle},
+  {"sparkleRGB", effectSparkleRGB},
+  {"spreadInFromPoint", effectSpreadInFromPoint},
+  {"spreadInFromPoint2Color", effectSpreadInFromPoint2Color},
+  {"spreadInFromPoint2RGB", effectSpreadInFromPoint2RGB},
+  {"spreadInFromPointRGB", effectSpreadInFromPointRGB},
+  {"spreadOutFromPoint", effectSpreadOutFromPoint},
+  {"spreadOutToPoint", effectSpreadOutToPoint},
+  // New effects from pinduino.cpp
+  {"chaseAllAdr2RGB", effectChaseAllAdr2RGB},
+  {"chaseAllAdrRGB", effectChaseAllAdrRGB},
+  {"fadeAllAdrColor2Color", effectFadeAllAdrColor2Color},
+  {"fadeAllAdrIn", effectFadeAllAdrIn},
+  {"fadeAllAdrOut", effectFadeAllAdrOut},
+  {"fadeAllAdrRGB2RGB", effectFadeAllAdrRGB2RGB},
+  {"sparkleAllAdr", effectSparkleAllAdr},
+  {"sparkleAllAdrRGB", effectSparkleAllAdrRGB}
+};
+
+const int NUM_EFFECTS = sizeof(effects) / sizeof(effects[0]);
+
 void setup() {
   Serial.begin(115200);
   while (!Serial) { ; }
@@ -14,499 +164,29 @@ void setup() {
   strip->strip()->setBrightness(50); // Cap brightness for power safety
   strip->clear();
   strip->strip()->show();
-  Serial.println("Pinduino Effects Test Starting (All 61 Effects)...");
+  Serial.println("Pinduino Effects Test Starting (67 Effects)...");
 }
 
 void loop() {
-  // 1. colorRGB - Red
-  Serial.println("Effect: colorRGB - Red");
-  strip->colorRGB(255, 0, 0);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
+  for (int i = 0; i < NUM_EFFECTS; i++) {
+    // Print effect number and name
+    Serial.print(i + 1);
+    Serial.print(". ");
+    Serial.print(effects[i].name);
+    Serial.println(" - Demo");
 
-  // 2. colorRGB - Green
-  Serial.println("Effect: colorRGB - Green");
-  strip->colorRGB(0, 255, 0);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
+    // Run the effect
+    effects[i].function();
+    strip->strip()->show();
+    delay(EFFECT_DURATION);
 
-  // 3. color - Blue
-  Serial.println("Effect: color - Blue");
-  strip->color("blue");
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
+    // Clear the strip for the next effect
+    strip->clear();
+    strip->strip()->show();
 
-  // 4. clear - White to Black
-  Serial.println("Effect: clear - White to Black");
-  strip->colorRGB(255, 255, 255);
-  strip->strip()->show();
-  delay(1000);
-  strip->clear();
-  strip->strip()->show();
-  delay(EFFECT_DURATION - 1000);
-
-  // 5. fadeIn - Yellow
-  Serial.println("Effect: fadeIn - Yellow");
-  strip->fadeIn("yellow", 1000);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 6. fadeInRGB - Cyan
-  Serial.println("Effect: fadeInRGB - Cyan");
-  strip->fadeInRGB(0, 255, 255, 1000);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 7. fadeRGB2RGB - Red to Blue
-  Serial.println("Effect: fadeRGB2RGB - Red to Blue");
-  strip->fadeRGB2RGB(255, 0, 0, 0, 0, 255, 1000);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 8. fadeColor2Color - Green to Purple
-  Serial.println("Effect: fadeColor2Color - Green to Purple");
-  strip->fadeColor2Color("green", "purple", 1000);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 9. fadeOut - White to Black
-  Serial.println("Effect: fadeOut - White to Black");
-  strip->colorRGB(255, 255, 255);
-  strip->strip()->show();
-  delay(1000);
-  strip->fadeOut(1000);
-  strip->strip()->show();
-  delay(EFFECT_DURATION - 1000);
-
-  // 10. RGBBand - Orange
-  Serial.println("Effect: RGBBand - Orange");
-  strip->RGBBand(NUM_LEDS / 2, 255, 165, 0, 10);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 11. RGBBandCont - Purple
-  Serial.println("Effect: RGBBandCont - Purple");
-  strip->RGBBandCont(NUM_LEDS / 2, 255, 0, 255, 10, 0, NUM_LEDS);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 12. chase2RGB - Red to Green
-  Serial.println("Effect: chase2RGB - Red to Green");
-  strip->chase2RGB(255, 0, 0, 0, 255, 0, 5, 20, 1);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 13. chase2Color - Blue to Yellow
-  Serial.println("Effect: chase2Color - Blue to Yellow");
-  strip->chase2Color("blue", "yellow", 5, 20, 1);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 14. chaseRGB - Purple
-  Serial.println("Effect: chaseRGB - Purple");
-  strip->chaseRGB(255, 0, 255, 5, 20, 1);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 15. chase - Cyan
-  Serial.println("Effect: chase - Cyan");
-  strip->chase("cyan", 5, 20, 1);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 16. chase2RGBFromPoint - Red to Green
-  Serial.println("Effect: chase2RGBFromPoint - Red to Green");
-  strip->chase2RGBFromPoint(NUM_LEDS / 2, 255, 0, 0, 0, 255, 0, 5, 20);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 17. chase2ColorFromPoint - Blue to Yellow
-  Serial.println("Effect: chase2ColorFromPoint - Blue to Yellow");
-  strip->chase2ColorFromPoint(NUM_LEDS / 2, "blue", "yellow", 5, 20);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 18. chase2RGBCont - Green to Purple
-  Serial.println("Effect: chase2RGBCont - Green to Purple");
-  strip->chase2RGBCont(0, 255, 0, 255, 0, 255, 5, 20, 1, 0, NUM_LEDS);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 19. chase2ColorCont - Cyan to Orange
-  Serial.println("Effect: chase2ColorCont - Cyan to Orange");
-  strip->chase2ColorCont("cyan", "orange", 5, 20, 1, 0, NUM_LEDS);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 20. chaseColorCont - Pink
-  Serial.println("Effect: chaseColorCont - Pink");
-  strip->chaseColorCont("pink", 5, 20, 1, 0, NUM_LEDS);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 21. spreadInFromPoint2RGB - Red to Blue
-  Serial.println("Effect: spreadInFromPoint2RGB - Red to Blue");
-  strip->spreadInFromPoint2RGB(NUM_LEDS / 2, 255, 0, 0, 0, 0, 255, 1000);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 22. spreadInFromPoint2Color - Green to Yellow
-  Serial.println("Effect: spreadInFromPoint2Color - Green to Yellow");
-  strip->spreadInFromPoint2Color(NUM_LEDS / 2, "green", "yellow", 1000);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 23. spreadInFromPointRGB - Purple
-  Serial.println("Effect: spreadInFromPointRGB - Purple");
-  strip->spreadInFromPointRGB(NUM_LEDS / 2, 255, 0, 255, 1000);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 24. spreadInFromPoint - Cyan
-  Serial.println("Effect: spreadInFromPoint - Cyan");
-  strip->spreadInFromPoint(NUM_LEDS / 2, "cyan", 1000);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 25. spreadOutFromPoint - White fading out
-  Serial.println("Effect: spreadOutFromPoint - White fading out");
-  strip->colorRGB(255, 255, 255);
-  strip->strip()->show();
-  strip->spreadOutFromPoint(NUM_LEDS / 2, 1000);
-  strip->strip()->show();
-  delay(EFFECT_DURATION - 1000);
-
-  // 26. spreadOutToPoint - White fading to center
-  Serial.println("Effect: spreadOutToPoint - White fading to center");
-  strip->colorRGB(255, 255, 255);
-  strip->strip()->show();
-  strip->spreadOutToPoint(NUM_LEDS / 2, 1000);
-  strip->strip()->show();
-  delay(EFFECT_DURATION - 1000);
-
-  // 27. explosionRGB - Orange
-  Serial.println("Effect: explosionRGB - Orange");
-  strip->explosionRGB(NUM_LEDS / 2, 255, 165, 0, 10);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 28. explosion - Purple
-  Serial.println("Effect: explosion - Purple");
-  strip->explosion(NUM_LEDS / 2, "purple", 10);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 29. rainbow
-  Serial.println("Effect: rainbow");
-  strip->rainbow(20);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 30. rainbowCycle
-  Serial.println("Effect: rainbowCycle");
-  strip->rainbowCycle(20);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 31. RGBBullet - Green
-  Serial.println("Effect: RGBBullet - Green");
-  strip->RGBBullet(NUM_LEDS / 2, 0, 255, 0, 10, 1);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 32. RGBBulletCont - Blue
-  Serial.println("Effect: RGBBulletCont - Blue");
-  strip->RGBBulletCont(NUM_LEDS / 2, 0, 0, 255, 10, 1);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 33. bulletP2P_2RGB - Red to Green
-  Serial.println("Effect: bulletP2P_2RGB - Red to Green");
-  strip->bulletP2P_2RGB(255, 0, 0, 0, 255, 0, 5, 20, 1, 0, NUM_LEDS);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 34. bulletP2P_2Color - Blue to Yellow
-  Serial.println("Effect: bulletP2P_2Color - Blue to Yellow");
-  strip->bulletP2P_2Color("blue", "yellow", 5, 20, 1, 0, NUM_LEDS);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 35. bulletFromPoint2RGB - Green to Purple
-  Serial.println("Effect: bulletFromPoint2RGB - Green to Purple");
-  strip->bulletFromPoint2RGB(0, 255, 0, 255, 0, 255, 5, 20, NUM_LEDS / 2);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 36. bulletFromPointRGB - Cyan
-  Serial.println("Effect: bulletFromPointRGB - Cyan");
-  strip->bulletFromPointRGB(0, 255, 255, 5, 20, NUM_LEDS / 2);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 37. bulletFromPoint - Orange
-  Serial.println("Effect: bulletFromPoint - Orange");
-  strip->bulletFromPoint("orange", 5, 20, NUM_LEDS / 2);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 38. bulletFromPoint2Color - Red to Blue
-  Serial.println("Effect: bulletFromPoint2Color - Red to Blue");
-  strip->bulletFromPoint2Color("red", "blue", 5, 20, NUM_LEDS / 2);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 39. bullet2RGB - Yellow to Purple
-  Serial.println("Effect: bullet2RGB - Yellow to Purple");
-  strip->bullet2RGB(255, 255, 0, 255, 0, 255, 5, 20, 1);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 40. bulletRGB - Green
-  Serial.println("Effect: bulletRGB - Green");
-  strip->bulletRGB(0, 255, 0, 5, 20, 1);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 41. bullet2Color - Cyan to Pink
-  Serial.println("Effect: bullet2Color - Cyan to Pink");
-  strip->bullet2Color("cyan", "pink", 5, 20, 1);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 42. bullet - Yellow
-  Serial.println("Effect: bullet - Yellow");
-  strip->bullet("yellow", 5, 20, 1);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 43. multiBullet2RGB - Red to Blue
-  Serial.println("Effect: multiBullet2RGB - Red to Blue");
-  strip->multiBullet2RGB(255, 0, 0, 0, 0, 255, 5, 20, 1, 3);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 44. multiBulletRGB - Green
-  Serial.println("Effect: multiBulletRGB - Green");
-  strip->multiBulletRGB(0, 255, 0, 5, 20, 1, 3);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 45. multiBullet - Purple
-  Serial.println("Effect: multiBullet - Purple");
-  strip->multiBullet("purple", 5, 20, 1, 3);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 46. multiBullet2Color - Blue to Orange
-  Serial.println("Effect: multiBullet2Color - Blue to Orange");
-  strip->multiBullet2Color("blue", "orange", 5, 20, 1, 3);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 47. Matrix2RGB - Green to Blue
-  Serial.println("Effect: Matrix2RGB - Green to Blue");
-  strip->Matrix2RGB(0, 255, 0, 0, 0, 255, 5, 20, 1);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 48. Matrix2Color - Red to Yellow
-  Serial.println("Effect: Matrix2Color - Red to Yellow");
-  strip->Matrix2Color("red", "yellow", 5, 20, 1);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 49. RGBMatrix - Cyan
-  Serial.println("Effect: RGBMatrix - Cyan");
-  strip->RGBMatrix(5, 0, 255, 255, 5, 1);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 50. sparkleRGB - Pink
-  Serial.println("Effect: sparkleRGB - Pink");
-  strip->sparkleRGB(255, 192, 203, 20, 50);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 51. sparkle - Orange
-  Serial.println("Effect: sparkle - Orange");
-  strip->sparkle("orange", 20, 50);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 52. dataStreamRGB - Blue
-  Serial.println("Effect: dataStreamRGB - Blue");
-  strip->dataStreamRGB(0, 0, 255, 20, 50, 1);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 53. dataStream - Green
-  Serial.println("Effect: dataStream - Green");
-  strip->dataStream("green", 20, 50, 1);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 54. dataStreamNoTailRGB - Red
-  Serial.println("Effect: dataStreamNoTailRGB - Red");
-  strip->dataStreamNoTailRGB(255, 0, 0, 20, 50, 1);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 55. dataStreamNoTail - Yellow
-  Serial.println("Effect: dataStreamNoTail - Yellow");
-  strip->dataStreamNoTail("yellow", 20, 50, 1);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 56. dataStreamNoTail2RGB - Cyan to Purple
-  Serial.println("Effect: dataStreamNoTail2RGB - Cyan to Purple");
-  strip->dataStreamNoTail2RGB(0, 255, 255, 255, 0, 255, 20, 50, 1);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 57. dataStreamNoTail2Color - Red to Blue
-  Serial.println("Effect: dataStreamNoTail2Color - Red to Blue");
-  strip->dataStreamNoTail2Color("red", "blue", 20, 50, 1);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 58. equalizerRGB - Green to Red
-  Serial.println("Effect: equalizerRGB - Green to Red");
-  strip->equalizerRGB(0, 255, 0, 255, 0, 0, 20, 50, 5, 1, 0);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 59. equalizer - Blue to Yellow
-  Serial.println("Effect: equalizer - Blue to Yellow");
-  strip->equalizer("blue", "yellow", 20, 50, 5, 1);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 60. fire - Red/Orange/Yellow
-  Serial.println("Effect: fire - Red/Orange/Yellow");
-  strip->fire(20, 50);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
-
-  // 61. meteorRain - White
-  Serial.println("Effect: meteorRain - White");
-  strip->meteorRain(255, 255, 255, 5, 64, true, 30);
-  strip->strip()->show();
-  delay(EFFECT_DURATION);
-  strip->clear();
-  strip->strip()->show();
+    // Print double dash line
+    Serial.println("--");
+  }
 
   Serial.println("Test Complete. Restarting...");
   delay(2000);
