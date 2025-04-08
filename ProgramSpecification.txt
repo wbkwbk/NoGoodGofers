@@ -14,3 +14,25 @@ it cycles through each attract color exactly once in random order before repeati
 those are the attract colors
 dark green, light green, dark blue, light blue, purple, please represent the colors for the pinduino library in rgb values
 
+can you please add according the following description for each J126(x) the according effects listed under each J126(x) event
+Pleaese randomly choose one effect. Each effect is used once until each effect for each J126(x) is unsed once
+Please assign randomly the following colors: red, green, blue, yellow, cyan, purple, white, orange, lime, sky, mint, magenta, lavender 
+until each color is used once then start using them again
+
+J126(10)
+	nggPinduno.adrLED1()->bullet2Color("green", "red", 20, 2, 1); // Blocking
+	bulletFromPoint2Color	
+	chase2RGBFromPoint
+	spreadInFromPoint 
+
+J126(9)) {
+      nggPinduno.adrLED1()->bullet2Color("green", "red", 20, 2, 1); // Blocking
+      dataStream
+	  dataStreamRGB
+	  spreadInFromPoint2Color 
+J126(7)
+	rainbow 
+	rainbowCycle 
+	RGBBullet 
+	spreadInFromPoint2RGB 
+

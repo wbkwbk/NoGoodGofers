@@ -70,7 +70,7 @@ uint8_t currentAttractB = DARK_GREEN_B;
 String attractColorName = "darkgreen";
 bool gameActive = false;
 
-// Color cycling variables
+// Color cycling variables for attract mode
 bool colorUsed[NUM_ATTRACT_COLORS] = {false};
 int availableColors[NUM_ATTRACT_COLORS];
 int numAvailableColors = 0;
@@ -83,6 +83,23 @@ const int brightnessChangeThreshold = 5;
 
 // === Pinduino Instance ===
 pinduinoext nggPinduno(aLEDNum1, aLEDNum2, aLEDNum3, "Nano");
+
+// === Dynamic Effect and Color Management ===
+const int NUM_EFFECTS_J126_10 = 4;
+const int NUM_EFFECTS_J126_9 = 4;
+const int NUM_EFFECTS_J126_7 = 4;
+const int NUM_COLORS = 13;
+
+static bool usedEffectsJ126_10[NUM_EFFECTS_J126_10] = {false};
+static bool usedEffectsJ126_9[NUM_EFFECTS_J126_9] = {false};
+static bool usedEffectsJ126_7[NUM_EFFECTS_J126_7] = {false};
+static int effectsRemainingJ126_10 = NUM_EFFECTS_J126_10;
+static int effectsRemainingJ126_9 = NUM_EFFECTS_J126_9;
+static int effectsRemainingJ126_7 = NUM_EFFECTS_J126_7;
+
+static bool usedColors[NUM_COLORS] = {false};
+static int colorsRemaining = NUM_COLORS;
+static const char* colorList[NUM_COLORS] = {"red", "green", "blue", "yellow", "cyan", "purple", "white", "orange", "lime", "sky", "mint", "magenta", "lavender"};
 
 // === Function Prototypes ===
 void setToIdleColor(bool fade = true);
@@ -99,6 +116,10 @@ void changeAttractColor();
 void setAttractEffect();
 void resetColorCycle();
 int getNextRandomColor();
+int getRandomEffect(int eventNum, int numEffects, bool* usedEffects, int& effectsRemaining);
+const char* getRandomColor();
+void resetEffects(int eventNum);
+void resetColors();
 
 // === Setup ===
 void setup() {
@@ -118,6 +139,9 @@ void setup() {
   changeAttractColor();
   setAttractEffect();
   debugLEDState("ATTRACT");
+
+  // Seed random number generator
+  randomSeed(analogRead(A0));
 }
 
 // === Main Loop ===
@@ -142,6 +166,7 @@ void loop() {
   }
 }
 
+// === Attract Mode Color Cycling ===
 void resetColorCycle() {
   for (int i = 0; i < NUM_ATTRACT_COLORS; i++) {
     colorUsed[i] = false;
@@ -213,9 +238,7 @@ void changeAttractColor() {
 }
 
 void setAttractEffect() {
-  // Set base color
   nggPinduno.adrLED1()->colorRGB(currentAttractR, currentAttractG, currentAttractB);
-  // Add sparkle effect with a brighter version of the current color
   nggPinduno.adrLED1()->sparkleRGB(
     min(255, currentAttractR * 1.2),
     min(255, currentAttractG * 1.2),
@@ -286,6 +309,85 @@ void setToIdleColor(bool fade) {
   }
 }
 
+// === Dynamic Effect and Color Selection ===
+int getRandomEffect(int eventNum, int numEffects, bool* usedEffects, int& effectsRemaining) {
+  if (effectsRemaining == 0) {
+    resetEffects(eventNum);
+  }
+
+  int availableEffects[numEffects];
+  int availableCount = 0;
+  for (int i = 0; i < numEffects; i++) {
+    if (!usedEffects[i]) {
+      availableEffects[availableCount++] = i;
+    }
+  }
+
+  int selectedIndex = random(availableCount);
+  int selectedEffect = availableEffects[selectedIndex];
+  usedEffects[selectedEffect] = true;
+  effectsRemaining--;
+  
+  DEBUG_PRINT("Selected effect for J126(");
+  DEBUG_PRINT(eventNum);
+  DEBUG_PRINT("): ");
+  DEBUG_PRINTLN(selectedEffect);
+  return selectedEffect;
+}
+
+void resetEffects(int eventNum) {
+  if (eventNum == 10) {
+    for (int i = 0; i < NUM_EFFECTS_J126_10; i++) {
+      usedEffectsJ126_10[i] = false;
+    }
+    effectsRemainingJ126_10 = NUM_EFFECTS_J126_10;
+  } else if (eventNum == 9) {
+    for (int i = 0; i < NUM_EFFECTS_J126_9; i++) {
+      usedEffectsJ126_9[i] = false;
+    }
+    effectsRemainingJ126_9 = NUM_EFFECTS_J126_9;
+  } else if (eventNum == 7) {
+    for (int i = 0; i < NUM_EFFECTS_J126_7; i++) {
+      usedEffectsJ126_7[i] = false;
+    }
+    effectsRemainingJ126_7 = NUM_EFFECTS_J126_7;
+  }
+  DEBUG_PRINT("Reset effects for J126(");
+  DEBUG_PRINT(eventNum);
+  DEBUG_PRINTLN(")");
+}
+
+const char* getRandomColor() {
+  if (colorsRemaining == 0) {
+    resetColors();
+  }
+
+  int availableColorsList[NUM_COLORS];
+  int availableCount = 0;
+  for (int i = 0; i < NUM_COLORS; i++) {
+    if (!usedColors[i]) {
+      availableColorsList[availableCount++] = i;
+    }
+  }
+
+  int selectedIndex = random(availableCount);
+  int selectedColorIdx = availableColorsList[selectedIndex];
+  usedColors[selectedColorIdx] = true;
+  colorsRemaining--;
+
+  DEBUG_PRINT("Selected color: ");
+  DEBUG_PRINTLN(colorList[selectedColorIdx]);
+  return colorList[selectedColorIdx];
+}
+
+void resetColors() {
+  for (int i = 0; i < NUM_COLORS; i++) {
+    usedColors[i] = false;
+  }
+  colorsRemaining = NUM_COLORS;
+  DEBUG_PRINTLN("Reset colors");
+}
+
 // === Pin Trigger Handling ===
 bool checkPinStates() {
   static int trigger = 0;
@@ -301,17 +403,71 @@ bool checkPinStates() {
     }
     else if (nggPinduno.pinState()->J126(10)) {
       nggPinduno.adrLED1()->fadeOut(50);
-      nggPinduno.adrLED1()->bullet2Color("green", "red", 20, 2, 1); // Blocking
+      int effect = getRandomEffect(10, NUM_EFFECTS_J126_10, usedEffectsJ126_10, effectsRemainingJ126_10);
+      const char* color1 = getRandomColor();
+      const char* color2 = (effect == 0 || effect == 1) ? getRandomColor() : nullptr; // Only two-color effects need a second color
+      switch (effect) {
+        case 0: // bullet2Color
+          nggPinduno.adrLED1()->bullet2Color(color1, color2, 20, 2, 1);
+          break;
+        case 1: // bulletFromPoint2Color
+          nggPinduno.adrLED1()->bulletFromPoint2Color(color1, color2, 20, 2, aLEDNum1 / 2);
+          break;
+        case 2: // chase2RGBFromPoint (using two colors)
+          nggPinduno.adrLED1()->chase2RGBFromPoint(aLEDNum1 / 2, 0, 255, 255, 255, 0, 0, 5, 20); // Cyan to Red as example
+          break;
+        case 3: // spreadInFromPoint
+          nggPinduno.adrLED1()->spreadInFromPoint(aLEDNum1 / 2, color1, 1000);
+          break;
+      }
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(9)) {
       nggPinduno.adrLED1()->fadeOut(50);
-      nggPinduno.adrLED1()->bulletFromPoint2Color("white", "green", 17, 5, 17); // Blocking
+      int effect = getRandomEffect(9, NUM_EFFECTS_J126_9, usedEffectsJ126_9, effectsRemainingJ126_9);
+      const char* color1 = getRandomColor();
+      const char* color2 = (effect == 0 || effect == 3) ? getRandomColor() : nullptr; // Only two-color effects need a second color
+      switch (effect) {
+        case 0: // bullet2Color
+          nggPinduno.adrLED1()->bullet2Color(color1, color2, 20, 2, 1);
+          break;
+        case 1: // dataStream
+          nggPinduno.adrLED1()->dataStream(color1, 20, 50, 1);
+          break;
+        case 2: // dataStreamRGB (using RGB equivalent of color1)
+          if (strcmp(color1, "red") == 0) nggPinduno.adrLED1()->dataStreamRGB(255, 0, 0, 20, 50, 1);
+          else if (strcmp(color1, "green") == 0) nggPinduno.adrLED1()->dataStreamRGB(0, 255, 0, 20, 50, 1);
+          else if (strcmp(color1, "blue") == 0) nggPinduno.adrLED1()->dataStreamRGB(0, 0, 255, 20, 50, 1);
+          else nggPinduno.adrLED1()->dataStreamRGB(255, 255, 255, 20, 50, 1); // Default to white
+          break;
+        case 3: // spreadInFromPoint2Color
+          nggPinduno.adrLED1()->spreadInFromPoint2Color(aLEDNum1 / 2, color1, color2, 1000);
+          break;
+      }
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(7)) {
       nggPinduno.adrLED1()->fadeOut(50);
-      nggPinduno.adrLED1()->bulletFromPoint2Color("green", "white", 17, 5, 17); // Blocking
+      int effect = getRandomEffect(7, NUM_EFFECTS_J126_7, usedEffectsJ126_7, effectsRemainingJ126_7);
+      const char* color1 = getRandomColor();
+      const char* color2 = (effect == 3) ? getRandomColor() : nullptr; // Only spreadInFromPoint2RGB needs a second color
+      switch (effect) {
+        case 0: // rainbow
+          nggPinduno.adrLED1()->rainbow(20);
+          break;
+        case 1: // rainbowCycle
+          nggPinduno.adrLED1()->rainbowCycle(20);
+          break;
+        case 2: // RGBBullet
+          if (strcmp(color1, "red") == 0) nggPinduno.adrLED1()->RGBBullet(aLEDNum1 / 2, 255, 0, 0, 10, 1);
+          else if (strcmp(color1, "green") == 0) nggPinduno.adrLED1()->RGBBullet(aLEDNum1 / 2, 0, 255, 0, 10, 1);
+          else if (strcmp(color1, "blue") == 0) nggPinduno.adrLED1()->RGBBullet(aLEDNum1 / 2, 0, 0, 255, 10, 1);
+          else nggPinduno.adrLED1()->RGBBullet(aLEDNum1 / 2, 255, 255, 255, 10, 1); // Default to white
+          break;
+        case 3: // spreadInFromPoint2RGB
+          nggPinduno.adrLED1()->spreadInFromPoint2RGB(aLEDNum1 / 2, 255, 0, 0, 0, 255, 0, 1000); // Red to Green as example
+          break;
+      }
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(6)) {
