@@ -126,6 +126,7 @@ void resetColors();
 // === Setup ===
 void setup() {
   Serial.begin(115200);
+  DEBUG_PRINTLN("setup");
   gameActive = false;
 
   nggPinduno.adrLED1()->clear();
