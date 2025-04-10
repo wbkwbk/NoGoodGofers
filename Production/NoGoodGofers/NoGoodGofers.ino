@@ -8,9 +8,9 @@
 // === Debug Configuration ===
 #define DEBUG 1
 #if DEBUG == 1
-  #define DEBUG_PRINT(x) Serial.print(x)
+  #define DEBUG_PRINT(x) Serial.print(F(x))
   #define DEBUG_PRINTDEC(x) Serial.print(x, DEC)
-  #define DEBUG_PRINTLN(x) Serial.println(x)
+  #define DEBUG_PRINTLN(x) Serial.println(F(x))
 #else
   #define DEBUG_PRINT(x)
   #define DEBUG_PRINTDEC(x)
@@ -126,6 +126,7 @@ void resetColors();
 // === Setup ===
 void setup() {
   Serial.begin(115200);
+  delay(1000); // Add delay for serial stabilization
   DEBUG_PRINTLN("setup");
   gameActive = false;
 
@@ -238,17 +239,21 @@ void changeAttractColor() {
       break;
   }
   DEBUG_PRINT("Attract color changed to: ");
-  DEBUG_PRINTLN(attractColorName);
+  Serial.print(attractColorName); // Can't use F() with variable strings
+  DEBUG_PRINTLN("");
   DEBUG_PRINT("Colors remaining: ");
-  DEBUG_PRINTLN(numAvailableColors);
+  DEBUG_PRINTDEC(numAvailableColors);
+  DEBUG_PRINTLN("");
 }
 
 void setAttractEffect() {
   DEBUG_PRINT("Effect: colorRGB with color: ");
-  DEBUG_PRINTLN(attractColorName);
+  Serial.print(attractColorName); // Can't use F() with variable strings
+  DEBUG_PRINTLN("");
   nggPinduno.adrLED1()->colorRGB(currentAttractR, currentAttractG, currentAttractB);
   DEBUG_PRINT("Effect: sparkleRGB with color: ");
-  DEBUG_PRINTLN(attractColorName);
+  Serial.print(attractColorName); // Can't use F() with variable strings
+  DEBUG_PRINTLN("");
   nggPinduno.adrLED1()->sparkleRGB(
     min(255, currentAttractR * 1.2),
     min(255, currentAttractG * 1.2),
@@ -342,9 +347,10 @@ int getRandomEffect(int eventNum, int numEffects, bool* usedEffects, int& effect
   effectsRemaining--;
   
   DEBUG_PRINT("Selected effect for J126(");
-  DEBUG_PRINT(eventNum);
+  DEBUG_PRINTDEC(eventNum);
   DEBUG_PRINT("): ");
-  DEBUG_PRINTLN(selectedEffect);
+  DEBUG_PRINTDEC(selectedEffect);
+  DEBUG_PRINTLN("");
   return selectedEffect;
 }
 
@@ -366,7 +372,7 @@ void resetEffects(int eventNum) {
     effectsRemainingJ126_7 = NUM_EFFECTS_J126_7;
   }
   DEBUG_PRINT("Reset effects for J126(");
-  DEBUG_PRINT(eventNum);
+  DEBUG_PRINTDEC(eventNum);
   DEBUG_PRINTLN(")");
 }
 
@@ -394,12 +400,11 @@ const char* getRandomColor() {
 }
 
 void getRGBForColor(const char* color, uint8_t& r, uint8_t& g, uint8_t& b) {
-  // Modifies r, g, b directly via references to return RGB values for the given color
   if (strcmp(color, "green") == 0) { r = 0; g = 255; b = 0; }
-  else if (strcmp(color, "lime") == 0) { r = 0; g = 255; b = 0; } // Bright green
+  else if (strcmp(color, "lime") == 0) { r = 0; g = 255; b = 0; }
   else if (strcmp(color, "yellow") == 0) { r = 255; g = 255; b = 0; }
-  else if (strcmp(color, "sky") == 0) { r = 135; g = 206; b = 235; } // Sky blue
-  else if (strcmp(color, "brown") == 0) { r = 139; g = 69; b = 19; } // Saddle brown
+  else if (strcmp(color, "sky") == 0) { r = 135; g = 206; b = 235; }
+  else if (strcmp(color, "brown") == 0) { r = 139; g = 69; b = 19; }
   else if (strcmp(color, "orange") == 0) { r = 255; g = 165; b = 0; }
   else if (strcmp(color, "white") == 0) { r = 255; g = 255; b = 255; }
   else if (strcmp(color, "red") == 0) { r = 255; g = 0; b = 0; }
@@ -408,7 +413,7 @@ void getRGBForColor(const char* color, uint8_t& r, uint8_t& g, uint8_t& b) {
   else if (strcmp(color, "gold") == 0) { r = 255; g = 215; b = 0; }
   else if (strcmp(color, "tan") == 0) { r = 210; g = 180; b = 140; }
   else if (strcmp(color, "blue") == 0) { r = 0; g = 0; b = 255; }
-  else { r = 255; g = 255; b = 255; } // Default to white if unknown
+  else { r = 255; g = 255; b = 255; }
 }
 
 void resetColors() {
@@ -425,115 +430,125 @@ bool checkPinStates() {
 
   if (isDelayOver()) {
     if (nggPinduno.pinState()->J126(12)) {
-      handleSimpleEffect(0, 0, 255, "colorRGB (Start button or tilt) with color: blue"); // Blue - Start button or tilt?
+      handleSimpleEffect(0, 0, 255, "colorRGB (Start button or tilt) with color: blue");
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(11)) {
-      handleSimpleEffect(255, 0, 0, "colorRGB (Game over or error) with color: red"); // Red - Game over or error?
+      handleSimpleEffect(255, 0, 0, "colorRGB (Game over or error) with color: red");
       trigger = 1;
     }
-    else if (nggPinduno.pinState()->J126(10)) { // Shots or ramps?
+    else if (nggPinduno.pinState()->J126(10)) {
       DEBUG_PRINTLN("Effect: fadeOut");
       nggPinduno.adrLED1()->fadeOut(50);
       int effect = getRandomEffect(10, NUM_EFFECTS_J126_10, usedEffectsJ126_10, effectsRemainingJ126_10);
       const char* color1 = getRandomColor();
-      const char* color2 = (effect == 0 || effect == 1 || effect == 2) ? getRandomColor() : nullptr; // Two-color effects
+      const char* color2 = (effect == 0 || effect == 1 || effect == 2) ? getRandomColor() : nullptr;
       switch (effect) {
-        case 0: // bullet2Color - Fast shot effect
+        case 0:
           DEBUG_PRINT("Effect: bullet2Color (Fast shot) with colors: ");
-          DEBUG_PRINT(color1);
+          Serial.print(color1);
           DEBUG_PRINT(", ");
-          DEBUG_PRINTLN(color2);
+          Serial.print(color2);
+          DEBUG_PRINTLN("");
           nggPinduno.adrLED1()->bullet2Color(color1, color2, 20, 2, 1);
           break;
-        case 1: // bulletFromPoint2Color - Ball launch
+        case 1:
           DEBUG_PRINT("Effect: bulletFromPoint2Color (Ball launch) with colors: ");
-          DEBUG_PRINT(color1);
+          Serial.print(color1);
           DEBUG_PRINT(", ");
-          DEBUG_PRINTLN(color2);
+          Serial.print(color2);
+          DEBUG_PRINTLN("");
           nggPinduno.adrLED1()->bulletFromPoint2Color(color1, color2, 20, 2, aLEDNum1 / 2);
           break;
-        case 2: // chase2RGBFromPoint - Ramp chase
+        case 2:
           DEBUG_PRINT("Effect: chase2RGBFromPoint (Ramp chase) with colors: ");
-          DEBUG_PRINT(color1);
+          Serial.print(color1);
           DEBUG_PRINT(", ");
-          DEBUG_PRINTLN(color2);
+          Serial.print(color2);
+          DEBUG_PRINTLN("");
           uint8_t r1, g1, b1, r2, g2, b2;
           getRGBForColor(color1, r1, g1, b1);
           getRGBForColor(color2, r2, g2, b2);
           nggPinduno.adrLED1()->chase2RGBFromPoint(aLEDNum1 / 2, r1, g1, b1, r2, g2, b2, 5, 20);
           break;
-        case 3: // spreadInFromPoint - Target hit
+        case 3:
           DEBUG_PRINT("Effect: spreadInFromPoint (Target hit) with color: ");
-          DEBUG_PRINTLN(color1);
+          Serial.print(color1);
+          DEBUG_PRINTLN("");
           nggPinduno.adrLED1()->spreadInFromPoint(aLEDNum1 / 2, color1, 1000);
           break;
       }
       trigger = 1;
     }
-    else if (nggPinduno.pinState()->J126(9)) { // Gopher pops or bumpers?
+    else if (nggPinduno.pinState()->J126(9)) {
       DEBUG_PRINTLN("Effect: fadeOut");
       nggPinduno.adrLED1()->fadeOut(50);
       int effect = getRandomEffect(9, NUM_EFFECTS_J126_9, usedEffectsJ126_9, effectsRemainingJ126_9);
       const char* color1 = getRandomColor();
-      const char* color2 = (effect == 0 || effect == 3) ? getRandomColor() : nullptr; // Two-color effects
+      const char* color2 = (effect == 0 || effect == 3) ? getRandomColor() : nullptr;
       switch (effect) {
-        case 0: // bullet2Color - Quick gopher pop
+        case 0:
           DEBUG_PRINT("Effect: bullet2Color (Quick gopher pop) with colors: ");
-          DEBUG_PRINT(color1);
+          Serial.print(color1);
           DEBUG_PRINT(", ");
-          DEBUG_PRINTLN(color2);
+          Serial.print(color2);
+          DEBUG_PRINTLN("");
           nggPinduno.adrLED1()->bullet2Color(color1, color2, 20, 2, 1);
           break;
-        case 1: // dataStream - Gopher digging
+        case 1:
           DEBUG_PRINT("Effect: dataStream (Gopher digging) with color: ");
-          DEBUG_PRINTLN(color1);
+          Serial.print(color1);
+          DEBUG_PRINTLN("");
           nggPinduno.adrLED1()->dataStream(color1, 20, 50, 1);
           break;
-        case 2: // dataStreamRGB - Bumper hit
+        case 2:
           DEBUG_PRINT("Effect: dataStreamRGB (Bumper hit) with color: ");
-          DEBUG_PRINTLN(color1);
+          Serial.print(color1);
+          DEBUG_PRINTLN("");
           uint8_t r, g, b;
           getRGBForColor(color1, r, g, b);
           nggPinduno.adrLED1()->dataStreamRGB(r, g, b, 20, 50, 1);
           break;
-        case 3: // spreadInFromPoint2Color - Gopher spread
+        case 3:
           DEBUG_PRINT("Effect: spreadInFromPoint2Color (Gopher spread) with colors: ");
-          DEBUG_PRINT(color1);
+          Serial.print(color1);
           DEBUG_PRINT(", ");
-          DEBUG_PRINTLN(color2);
+          Serial.print(color2);
+          DEBUG_PRINTLN("");
           nggPinduno.adrLED1()->spreadInFromPoint2Color(aLEDNum1 / 2, color1, color2, 1000);
           break;
       }
       trigger = 1;
     }
-    else if (nggPinduno.pinState()->J126(7)) { // Multi-ball or jackpot?
+    else if (nggPinduno.pinState()->J126(7)) {
       DEBUG_PRINTLN("Effect: fadeOut");
       nggPinduno.adrLED1()->fadeOut(50);
       int effect = getRandomEffect(7, NUM_EFFECTS_J126_7, usedEffectsJ126_7, effectsRemainingJ126_7);
       const char* color1 = getRandomColor();
-      const char* color2 = (effect == 3) ? getRandomColor() : nullptr; // Only spreadInFromPoint2RGB needs a second color
+      const char* color2 = (effect == 3) ? getRandomColor() : nullptr;
       switch (effect) {
-        case 0: // rainbow - Multi-ball celebration
+        case 0:
           DEBUG_PRINTLN("Effect: rainbow (Multi-ball celebration)");
           nggPinduno.adrLED1()->rainbow(20);
           break;
-        case 1: // rainbowCycle - Jackpot flash
+        case 1:
           DEBUG_PRINTLN("Effect: rainbowCycle (Jackpot flash)");
           nggPinduno.adrLED1()->rainbowCycle(20);
           break;
-        case 2: // RGBBullet - Ball explosion
+        case 2:
           DEBUG_PRINT("Effect: RGBBullet (Ball explosion) with color: ");
-          DEBUG_PRINTLN(color1);
+          Serial.print(color1);
+          DEBUG_PRINTLN("");
           uint8_t r, g, b;
           getRGBForColor(color1, r, g, b);
           nggPinduno.adrLED1()->RGBBullet(aLEDNum1 / 2, r, g, b, 10, 1);
           break;
-        case 3: // spreadInFromPoint2RGB - Big score spread
+        case 3:
           DEBUG_PRINT("Effect: spreadInFromPoint2RGB (Big score spread) with colors: ");
-          DEBUG_PRINT(color1);
+          Serial.print(color1);
           DEBUG_PRINT(", ");
-          DEBUG_PRINTLN(color2);
+          Serial.print(color2);
+          DEBUG_PRINTLN("");
           uint8_t r1, g1, b1, r2, g2, b2;
           getRGBForColor(color1, r1, g1, b1);
           getRGBForColor(color2, r2, g2, b2);
@@ -543,15 +558,15 @@ bool checkPinStates() {
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(6)) {
-      handleSimpleEffect(0, 255, 0, "colorRGB (Minor score) with color: green"); // Green - Minor score?
+      handleSimpleEffect(0, 255, 0, "colorRGB (Minor score) with color: green");
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(5)) {
-      handleSimpleEffect(255, 0, 0, "colorRGB (Hazard or miss) with color: red"); // Red - Hazard or miss?
+      handleSimpleEffect(255, 0, 0, "colorRGB (Hazard or miss) with color: red");
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(4)) {
-      handleSimpleEffect(0, 0, 255, "colorRGB (Bonus) with color: blue"); // Blue - Bonus?
+      handleSimpleEffect(0, 0, 255, "colorRGB (Bonus) with color: blue");
       trigger = 1;
     }
 
@@ -559,8 +574,8 @@ bool checkPinStates() {
       nggPinduno.pinState()->reset();
       timeLastEvent = millis();
       trigger = 0;
-      if (ledState != EFFECT_ACTIVE) { // If not already in EFFECT_ACTIVE (simple effect)
-        ledState = WHITE_IDLE; // Return to idle after complex effect
+      if (ledState != EFFECT_ACTIVE) {
+        ledState = WHITE_IDLE;
         setToIdleColor();
         debugLEDState("WHITE_IDLE");
       }
@@ -598,7 +613,8 @@ void readPotentiometer() {
     nggPinduno.adrLED1()->setBrightness(brightness);
     currentBrightness = brightness;
     DEBUG_PRINT("Brightness: ");
-    DEBUG_PRINTLN(currentBrightness);
+    DEBUG_PRINTDEC(currentBrightness);
+    DEBUG_PRINTLN("");
   }
 }
 
@@ -606,8 +622,8 @@ void readPotentiometer() {
 void debugLEDState(const char* newState) {
   static unsigned long lastStateChange = 0;
   DEBUG_PRINT("[STATE] ");
-  DEBUG_PRINT(millis() - lastStateChange);
+  DEBUG_PRINTDEC(millis() - lastStateChange);
   DEBUG_PRINT("ms -> ");
-  DEBUG_PRINTLN(newState);
+  Serial.println(newState); // Can't use F() with variable strings
   lastStateChange = millis();
 }
