@@ -239,7 +239,7 @@ void changeAttractColor() {
       break;
   }
   DEBUG_PRINT("Attract color changed to: ");
-  Serial.print(attractColorName); // Can't use F() with variable strings
+  Serial.print(attractColorName);
   DEBUG_PRINTLN("");
   DEBUG_PRINT("Colors remaining: ");
   DEBUG_PRINTDEC(numAvailableColors);
@@ -248,11 +248,11 @@ void changeAttractColor() {
 
 void setAttractEffect() {
   DEBUG_PRINT("Effect: colorRGB with color: ");
-  Serial.print(attractColorName); // Can't use F() with variable strings
+  Serial.print(attractColorName);
   DEBUG_PRINTLN("");
   nggPinduno.adrLED1()->colorRGB(currentAttractR, currentAttractG, currentAttractB);
   DEBUG_PRINT("Effect: sparkleRGB with color: ");
-  Serial.print(attractColorName); // Can't use F() with variable strings
+  Serial.print(attractColorName);
   DEBUG_PRINTLN("");
   nggPinduno.adrLED1()->sparkleRGB(
     min(255, currentAttractR * 1.2),
@@ -395,7 +395,7 @@ const char* getRandomColor() {
   colorsRemaining--;
 
   DEBUG_PRINT("Selected color: ");
-  DEBUG_PRINTLN(colorList[selectedColorIdx]);
+  Serial.println(colorList[selectedColorIdx]);
   return colorList[selectedColorIdx];
 }
 
@@ -587,7 +587,7 @@ bool checkPinStates() {
 
 // === Simple Effect Handler ===
 void handleSimpleEffect(uint8_t r, uint8_t g, uint8_t b, const char* effectDescription) {
-  DEBUG_PRINTLN(effectDescription);
+  Serial.println(effectDescription);
   nggPinduno.adrLED1()->colorRGB(r, g, b);
   effectStartTime = millis();
   ledState = EFFECT_ACTIVE;
@@ -624,6 +624,6 @@ void debugLEDState(const char* newState) {
   DEBUG_PRINT("[STATE] ");
   DEBUG_PRINTDEC(millis() - lastStateChange);
   DEBUG_PRINT("ms -> ");
-  Serial.println(newState); // Can't use F() with variable strings
+  Serial.println(newState);
   lastStateChange = millis();
 }
