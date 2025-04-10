@@ -251,10 +251,10 @@ void setAttractEffect() {
   Serial.print(attractColorName);
   DEBUG_PRINTLN("");
   nggPinduno.adrLED1()->colorRGB(currentAttractR, currentAttractG, currentAttractB);
-  DEBUG_PRINT("Effect: sparkleRGB with color: ");
+  DEBUG_PRINT("Effect: sparkle with color: ");
   Serial.print(attractColorName);
   DEBUG_PRINTLN("");
-  nggPinduno.adrLED1()->sparkleRGB(
+  nggPinduno.adrLED1()->sparkle(
     min(255, currentAttractR * 1.2),
     min(255, currentAttractG * 1.2),
     min(255, currentAttractB * 1.2),
