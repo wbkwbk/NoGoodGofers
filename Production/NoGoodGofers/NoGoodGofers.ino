@@ -1,5 +1,5 @@
-// No Good Gophers - Final Stable Implementation
-// Complete solution with reliable LED control
+// No Good Gophers - Final Stable Implementation with Voltage Monitoring
+// Complete solution with reliable LED control and working voltage check
 
 #include "pinduinoext.h"
 
@@ -26,11 +26,11 @@ const int aLEDNum3 = 0;
 pinduinoext nggPinduno(aLEDNum1, aLEDNum2, aLEDNum3, "Nano");
 
 // Timing Constants
-const unsigned long effectDuration = 2000;     // 2s for simple effects
-const unsigned long attractColorDuration = 5000; // 5s per attract color
-const unsigned long attractTimeout = 20000;    // 20s timeout to ATTRACT
-const unsigned long minRefreshInterval = 50;   // 50ms refresh rate
-const unsigned long voltageCheckInterval = 5000; // 5s voltage check
+const unsigned long effectDuration = 2000;
+const unsigned long attractColorDuration = 5000;
+const unsigned long attractTimeout = 20000;
+const unsigned long minRefreshInterval = 50;
+const unsigned long voltageCheckInterval = 5000;
 
 // State Machine
 enum GameState { ATTRACT, GAME_RUN, EFFECT_ACTIVE };
@@ -49,15 +49,23 @@ int attractColorIndex = 0;
 const String attractColors[] = {"green", "blue", "red"};
 bool colorsShown[3] = {false, false, false};
 
+// Voltage Monitoring
+const int VOLTAGE_PIN = A0;
+const float VOLTAGE_DIVIDER_RATIO = 2.0; // Adjust based on your voltage divider
+const float REFERENCE_VOLTAGE = 5.0;
+
 void setup() {
   #if DEBUG == 1
     Serial.begin(115200);
     debug_println("System Initializing...");
-    debug_println("LED Control v3.0 - Stable Release");
+    debug_println("LED Control v3.1 - With Voltage Monitoring");
   #endif
 
   // Power stabilization
   delay(500);
+  
+  // Initialize voltage monitoring
+  pinMode(VOLTAGE_PIN, INPUT);
   
   // Initialize LEDs
   nggPinduno.adrLED1()->clear();
@@ -66,9 +74,16 @@ void setup() {
   nggPinduno.pinState()->reset();
   
   selectNextAttractColor();
-  nggPinduno.adrLED1()->show(true); // Force initial update
+  nggPinduno.adrLED1()->show(true);
   
   debug_println("Initialization Complete");
+}
+
+
+float readVoltage() {
+  int rawValue = analogRead(VOLTAGE_PIN);
+  float voltage = (rawValue * REFERENCE_VOLTAGE) / 1023.0;
+  return voltage * VOLTAGE_DIVIDER_RATIO;
 }
 
 void loop() {
@@ -96,16 +111,19 @@ void loop() {
   checkPinStates();
 }
 
+
 void checkVoltage() {
   if (millis() - lastVoltageCheck > voltageCheckInterval) {
     lastVoltageCheck = millis();
-    int sensorValue = analogRead(A0);
-    float voltage = sensorValue * (5.0 / 1023.0);
+    float voltage = readVoltage();
     
     #if DEBUG == 1
+      debug_print("System Voltage: ");
+      debug_print_var(voltage);
+      debug_println("V");
+      
       if (voltage < 4.5) {
-        debug_print("WARNING: Low voltage: ");
-        debug_println_var(voltage);
+        debug_println("WARNING: Low voltage detected!");
       }
     #endif
   }
