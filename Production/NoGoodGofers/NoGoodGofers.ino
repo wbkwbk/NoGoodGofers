@@ -99,7 +99,7 @@ void handleAttractState() {
 
 void handleGameRunState() {
   if (stateChanged) {
-    nggPinduno.adrLED1()->setColorRGB(128, 128, 128);
+    nggPinduno.adrLED1()->colorRGB(128, 128, 128);
     stateChanged = false;
     lastRefreshTime = millis();
     debug_println("Entering GAME_RUN mode");

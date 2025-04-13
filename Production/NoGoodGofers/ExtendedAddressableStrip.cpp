@@ -1,3 +1,4 @@
+// ExtendedAddressableStrip.cpp
 #include "ExtendedAddressableStrip.h"
 
 ExtendedAddressableStrip::ExtendedAddressableStrip(int num, int pin, pinduinoPins* pinState)
@@ -6,4 +7,8 @@ ExtendedAddressableStrip::ExtendedAddressableStrip(int num, int pin, pinduinoPin
 void ExtendedAddressableStrip::setBrightness(uint8_t newBrightnessValue) {
     strip()->setBrightness(newBrightnessValue);
     strip()->show(); // Apply brightness change
+}
+
+void ExtendedAddressableStrip::show() {
+    strip()->show(); // Directly call the underlying show() method
 }

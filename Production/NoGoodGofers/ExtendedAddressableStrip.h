@@ -1,3 +1,4 @@
+// ExtendedAddressableStrip.h
 #ifndef EXTENDED_ADDRESSABLE_STRIP_H
 #define EXTENDED_ADDRESSABLE_STRIP_H
 
@@ -7,6 +8,7 @@ class ExtendedAddressableStrip : public AddressableStrip {
 public:
     ExtendedAddressableStrip(int num, int pin, pinduinoPins* pinState);
     void setBrightness(uint8_t newBrightnessValue);
+    void show(); // New method declaration
 };
 
 #endif
