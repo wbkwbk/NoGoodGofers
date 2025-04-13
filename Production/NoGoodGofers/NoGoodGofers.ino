@@ -1,8 +1,7 @@
-
 // Eric Lyons 2018
 // Updated by Martin Ruff & Grok 3 & Deepseek & ChatGPT 2025
-// Interfaced for pinduino shield v0.2 and v0.3 for "No Good Gophers" pinball
-// Uses pinduino library
+// No Good Gophers - Pinduino Implementation
+// Full program with 50ms GAME_RUN color refresh
 
 #include "pinduinoext.h"
 
@@ -29,10 +28,10 @@ const int aLEDNum3 = 0;
 pinduinoext nggPinduno(aLEDNum1, aLEDNum2, aLEDNum3, "Nano");
 
 // === Constants ===
-#define DELAYTIME 100
-#define IDLE_COLOR_FADE_TIME 200
-const unsigned long effectDuration = 2000; // Duration for simple effects
-const unsigned long attractColorDuration = 5000; // 5 seconds per attract color
+const unsigned long effectDuration = 2000;    // 2s for simple effects
+const unsigned long attractColorDuration = 5000;  // 5s per attract color
+const unsigned long gameRunRefreshInterval = 50;  // 50ms refresh for GAME_RUN
+const unsigned long attractTimeout = 20000;  // 20s timeout to ATTRACT
 
 // === State Machine ===
 enum GameState {
@@ -44,14 +43,15 @@ GameState currentState = ATTRACT;
 bool stateChanged = true; // Track state transitions
 
 // === Variables ===
-unsigned long timeLastEvent = 0; // time last event was last effectOccureded
+unsigned long timeLastEvent = 0;
 unsigned long lastColorChangeTime = 0;
 unsigned long effectStartTime = 0;
+unsigned long lastGameRunRefresh = 0;
 String currentEffectColor = "";
 String currentAttractColor = "";
 int attractColorIndex = 0;
 const String attractColors[] = {"green", "blue", "red"};
-bool colorsShown[3] = {false, false, false}; // Track which attract colors have been shown
+bool colorsShown[3] = {false, false, false};
 
 void setup() {
   #if DEBUG == 1
@@ -69,7 +69,7 @@ void setup() {
 void loop() {
   nggPinduno.pinState()->update();
   
-  // State machine logic with state entry actions
+  // State machine logic
   switch(currentState) {
     case ATTRACT:
       if (stateChanged) {
@@ -80,12 +80,12 @@ void loop() {
       break;
       
     case GAME_RUN:
-      nggPinduno.adrLED1()->colorRGB(128, 128, 128);
       if (stateChanged) {
         stateChanged = false;
-        //nggPinduno.adrLED1()->colorRGB(128, 128, 128); // Set color only once
-        //.adrLED1()->color("white"); // Set color only once
         debug_println("Entering GAME_RUN mode");
+        // Initial color set
+        nggPinduno.adrLED1()->colorRGB(128, 128, 128);
+        lastGameRunRefresh = millis();
       }
       handleGameRunState();
       break;
@@ -114,103 +114,30 @@ void handleAttractState() {
 }
 
 void handleGameRunState() {
-  // Color is set once when entering state, nothing more to do here
-  // Additional game running logic could be added here if needed
+  // Refresh the color every 50ms
+  if (millis() - lastGameRunRefresh >= gameRunRefreshInterval) {
+    nggPinduno.adrLED1()->colorRGB(128, 128, 128);
+    lastGameRunRefresh = millis();
+    
+    #if DEBUG == 1
+      static unsigned long lastDebug = 0;
+      if (millis() - lastDebug >= 1000) {
+        lastDebug = millis();
+        debug_println("Maintaining GAME_RUN color");
+      }
+    #endif
+  }
 }
 
 void handleEffectActiveState() {
-  // Only need to handle simple effects
+  // Only handle simple effects (complex effects are blocking)
   if (currentEffectColor != "" && (millis() - effectStartTime >= effectDuration)) {
     currentState = GAME_RUN;
     stateChanged = true;
     currentEffectColor = "";
-  }
-  // Complex effects are handled in checkPinStates()
-}
-
-
-void checkPinStates(){
-  boolean effectOccured = false;
-  
-  if (currentState == ATTRACT) {
-    // Any pin activity transitions to GAME_RUN
-    if (isAnyPinActive()) {
-      currentState = GAME_RUN;
-      stateChanged = true;
-      timeLastEvent = millis();
-      nggPinduno.pinState()->reset();
-      return;
-    }
-  }
-  
-  if (currentState == GAME_RUN || currentState == EFFECT_ACTIVE) {
-    // Check for pin effectOccureds
-    if (nggPinduno.pinState()->J126(12)) { // upper right 1 (blue)
-      nggPinduno.adrLED1()->color("blue");
-      effectOccuredEffect("blue");
-      effectOccured = true;
-    }
-    else if (nggPinduno.pinState()->J126(11)) { // upper right 2 (red)
-      nggPinduno.adrLED1()->color("red");
-      effectOccuredEffect("red");
-      effectOccured = true;
-    }
-    else if (nggPinduno.pinState()->J126(10)) { // upper right 3 (white)
-      nggPinduno.adrLED1()->bullet2Color("green", "red", 20, 2, 1);
-      currentState = GAME_RUN;
-      stateChanged = true;
-      effectOccured = true;
-    }
-    else if (nggPinduno.pinState()->J126(9)) { // upper playfield right
-      nggPinduno.adrLED1()->bulletFromPoint2Color("white", "green", 17, 5, 17);
-      currentState = GAME_RUN;
-      stateChanged = true;
-      effectOccured = true;
-    }
-    else if (nggPinduno.pinState()->J126(7)) { // upper playfield left
-      nggPinduno.adrLED1()->bulletFromPoint2Color("green", "white", 17, 5, 17);
-      currentState = GAME_RUN;
-      stateChanged = true;
-      effectOccured = true;
-    }
-    else if (nggPinduno.pinState()->J126(6)) { // upper left 3 (white)
-      nggPinduno.adrLED1()->color("green");
-      effectOccuredEffect("green");
-      effectOccured = true;
-    }
-    else if (nggPinduno.pinState()->J126(5)) { // upper left 2 (red)
-      nggPinduno.adrLED1()->color("red");
-      effectOccuredEffect("red");
-      effectOccured = true;
-    }
-    else if (nggPinduno.pinState()->J126(4)) { // upper left 1 (blue)
-      nggPinduno.adrLED1()->color("blue");
-      effectOccuredEffect("blue");
-      effectOccured = true;
-    }
-    
-    if (effectOccured) {
-      nggPinduno.pinState()->reset();
-      timeLastEvent = millis();
-    }
-    
-    // Return to ATTRACT mode after timeout with no activity
-    if (millis() - timeLastEvent > 20000) { // 20 seconds timeout
-      currentState = ATTRACT;
-      stateChanged = true;
-      selectNextAttractColor();
-      lastColorChangeTime = millis();
-    }
+    debug_println("Simple effect completed, returning to GAME_RUN");
   }
 }
-
-void effectOccuredEffect(String color) {
-  currentState = EFFECT_ACTIVE;
-  stateChanged = true;
-  currentEffectColor = color;
-  effectStartTime = millis();
-}
-
 
 void selectNextAttractColor() {
   // Check if all colors have been shown once
@@ -263,6 +190,96 @@ bool isAnyPinActive() {
   }
   return false;
 }
+
+void checkPinStates() {
+  int trigger = 0;
+  
+  if (currentState == ATTRACT) {
+    // Any pin activity transitions to GAME_RUN
+    if (isAnyPinActive()) {
+      currentState = GAME_RUN;
+      stateChanged = true;
+      timeLastEvent = millis();
+      nggPinduno.pinState()->reset();
+      return;
+    }
+  }
+  
+  if (currentState == GAME_RUN || currentState == EFFECT_ACTIVE) {
+    // Check for pin triggers
+    if (nggPinduno.pinState()->J126(12)) { // upper right 1 (blue) - simple effect
+      nggPinduno.adrLED1()->color("blue");
+      triggerEffect("blue");
+      trigger = 1;
+    }
+    else if (nggPinduno.pinState()->J126(11)) { // upper right 2 (red) - simple effect
+      nggPinduno.adrLED1()->color("red");
+      triggerEffect("red");
+      trigger = 1;
+    }
+    else if (nggPinduno.pinState()->J126(10)) { // upper right 3 (white) - complex effect
+      currentState = EFFECT_ACTIVE;
+      stateChanged = true;
+      nggPinduno.adrLED1()->bullet2Color("green", "red", 20, 2, 1); // Blocking call
+      currentState = GAME_RUN;
+      stateChanged = true;
+      trigger = 1;
+    }
+    else if (nggPinduno.pinState()->J126(9)) { // upper playfield right - complex effect
+      currentState = EFFECT_ACTIVE;
+      stateChanged = true;
+      nggPinduno.adrLED1()->bulletFromPoint2Color("white", "green", 17, 5, 17);
+      currentState = GAME_RUN;
+      stateChanged = true;
+      trigger = 1;
+    }
+    else if (nggPinduno.pinState()->J126(7)) { // upper playfield left - complex effect
+      currentState = EFFECT_ACTIVE;
+      stateChanged = true;
+      nggPinduno.adrLED1()->bulletFromPoint2Color("green", "white", 17, 5, 17);
+      currentState = GAME_RUN;
+      stateChanged = true;
+      trigger = 1;
+    }
+    else if (nggPinduno.pinState()->J126(6)) { // upper left 3 (white) - simple effect
+      nggPinduno.adrLED1()->color("green");
+      triggerEffect("green");
+      trigger = 1;
+    }
+    else if (nggPinduno.pinState()->J126(5)) { // upper left 2 (red) - simple effect
+      nggPinduno.adrLED1()->color("red");
+      triggerEffect("red");
+      trigger = 1;
+    }
+    else if (nggPinduno.pinState()->J126(4)) { // upper left 1 (blue) - simple effect
+      nggPinduno.adrLED1()->color("blue");
+      triggerEffect("blue");
+      trigger = 1;
+    }
+    
+    if (trigger) {
+      nggPinduno.pinState()->reset();
+      timeLastEvent = millis();
+    }
+    
+    // Return to ATTRACT mode after timeout
+    if (millis() - timeLastEvent > attractTimeout) {
+      currentState = ATTRACT;
+      stateChanged = true;
+      selectNextAttractColor();
+      lastColorChangeTime = millis();
+    }
+  }
+}
+
+void triggerEffect(String color) {
+  currentState = EFFECT_ACTIVE;
+  stateChanged = true;
+  currentEffectColor = color;
+  effectStartTime = millis();
+  debug_print("Triggering effect: ");
+  debug_println_var(color);
+} 
 
 
 /*
