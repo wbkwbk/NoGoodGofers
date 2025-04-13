@@ -86,16 +86,19 @@ void checkPinStates(){
   }
   
   if ( pd.pinState()->J126(6) ){ // upper left 3 (white)
+    Serial.println("Event: J126(6):->pd.adrLED1()->color(green)");  
     pd.adrLED1()->color("green");
     delay(50);
     trigger = 1;
   }
   if ( pd.pinState()->J126(5) ){ // upper left 2 (red)
+    Serial.println("Event: J126(5):->pd.adrLED1()->color(red)");  
     pd.adrLED1()->color("red");
     delay(50);
     trigger = 1;
   }
   if ( pd.pinState()->J126(4) ){ // upper left 1 (blue)
+    Serial.println("Event: J126(4):->pd.adrLED1()->color(blue)");  
     pd.adrLED1()->color("blue");
     delay(50);
     trigger = 1;
