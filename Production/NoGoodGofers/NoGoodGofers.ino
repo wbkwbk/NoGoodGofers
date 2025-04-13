@@ -80,9 +80,11 @@ void loop() {
       break;
       
     case GAME_RUN:
+      nggPinduno.adrLED1()->colorRGB(128, 128, 128);
       if (stateChanged) {
         stateChanged = false;
-        nggPinduno.adrLED1()->colorRGB(128, 128, 128); // Set color only once
+        //nggPinduno.adrLED1()->colorRGB(128, 128, 128); // Set color only once
+        //.adrLED1()->color("white"); // Set color only once
         debug_println("Entering GAME_RUN mode");
       }
       handleGameRunState();
