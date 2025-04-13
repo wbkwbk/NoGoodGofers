@@ -48,6 +48,7 @@ void checkPinStates(){
   if ( pd.pinState()->J126(12) ){ // upper right 1 (blue)
 //   pd.adrLED1()->fadeOut(50); 
 //   pd.adrLED1()->bullet2Color("blue", "white", 20, 2, 1);
+    Serial.println("Event: J126(12):->pd.adrLED1()->color(blue)");
     pd.adrLED1()->color("blue");
     delay(100);
    trigger = 1; 
@@ -56,6 +57,7 @@ void checkPinStates(){
   if ( pd.pinState()->J126(11) ){ //upper right 2 (red)
 //   pd.adrLED1()->fadeOut(50); 
 //   pd.adrLED1()->bullet2Color("red", "orange", 20, 2, 1);
+    Serial.println("Event: J126(11):->pd.adrLED1()->color(red)");
     pd.adrLED1()->color("red");
     delay(100);
     trigger = 1; 
@@ -63,6 +65,7 @@ void checkPinStates(){
 
   if ( pd.pinState()->J126(10) ){ //upper right 3 (white)
    pd.adrLED1()->fadeOut(50); 
+       Serial.println("Event: J126(10):->pd.adrLED1()->bullet2Color(green, red, 20, 2, 1)");
      pd.adrLED1()->bullet2Color("green", "red", 20, 2, 1);
 //    pd.adrLED1()->color("green");
 //    delay(100);
@@ -70,12 +73,14 @@ void checkPinStates(){
   }
   if ( pd.pinState()->J126(9) ){ // upper playfield right
    pd.adrLED1()->fadeOut(50); 
+    Serial.println("Event: J126(9):->pd.adrLED1()->bulletFromPoint2Color(white, green, 17, 5, 17)");
     pd.adrLED1()->bulletFromPoint2Color("white", "green", 17, 5, 17);
     trigger=1;
   }
   
   if ( pd.pinState()->J126(7) ){ // upper playfield left
    pd.adrLED1()->fadeOut(50); 
+    Serial.println("Event: J126(7):->pd.adrLED1()->bulletFromPoint2Color(green, white, 17, 5, 17);");
     pd.adrLED1()->bulletFromPoint2Color("green", "white", 17, 5, 17);
     trigger =1;
   }
