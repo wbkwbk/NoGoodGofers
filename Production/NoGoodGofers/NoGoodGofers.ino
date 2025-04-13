@@ -1,5 +1,5 @@
-// No Good Gophers - Pinduino Implementation
-// Complete Program with Stable Color Management
+// No Good Gophers - Final Stable Implementation
+// Complete solution with reliable LED control
 
 #include "pinduinoext.h"
 
@@ -28,8 +28,9 @@ pinduinoext nggPinduno(aLEDNum1, aLEDNum2, aLEDNum3, "Nano");
 // Timing Constants
 const unsigned long effectDuration = 2000;     // 2s for simple effects
 const unsigned long attractColorDuration = 5000; // 5s per attract color
-const unsigned long attractTimeout = 20000;   // 20s timeout to ATTRACT
-const unsigned long refreshInterval = 50;     // 50ms refresh rate
+const unsigned long attractTimeout = 20000;    // 20s timeout to ATTRACT
+const unsigned long minRefreshInterval = 50;   // 50ms refresh rate
+const unsigned long voltageCheckInterval = 5000; // 5s voltage check
 
 // State Machine
 enum GameState { ATTRACT, GAME_RUN, EFFECT_ACTIVE };
@@ -41,6 +42,7 @@ unsigned long timeLastEvent = 0;
 unsigned long lastColorChangeTime = 0;
 unsigned long effectStartTime = 0;
 unsigned long lastRefreshTime = 0;
+unsigned long lastVoltageCheck = 0;
 String currentEffectColor = "";
 String currentAttractColor = "";
 int attractColorIndex = 0;
@@ -50,22 +52,33 @@ bool colorsShown[3] = {false, false, false};
 void setup() {
   #if DEBUG == 1
     Serial.begin(115200);
-    debug_println("Initializing No Good Gophers");
+    debug_println("System Initializing...");
+    debug_println("LED Control v3.0 - Stable Release");
   #endif
+
+  // Power stabilization
+  delay(500);
   
+  // Initialize LEDs
   nggPinduno.adrLED1()->clear();
   nggPinduno.adrLED2()->clear();
   nggPinduno.adrLED3()->clear();
   nggPinduno.pinState()->reset();
   
   selectNextAttractColor();
-  nggPinduno.adrLED1()->show(); // Initial display update
+  nggPinduno.adrLED1()->show(true); // Force initial update
+  
+  debug_println("Initialization Complete");
 }
 
 void loop() {
+  // 1. Check system health
+  checkVoltage();
+  
+  // 2. Update pin states
   nggPinduno.pinState()->update();
   
-  // State Machine Execution
+  // 3. State Machine Execution
   switch(currentState) {
     case ATTRACT:
       handleAttractState();
@@ -79,8 +92,23 @@ void loop() {
       break;
   }
   
+  // 4. Check for pin triggers
   checkPinStates();
+}
 
+void checkVoltage() {
+  if (millis() - lastVoltageCheck > voltageCheckInterval) {
+    lastVoltageCheck = millis();
+    int sensorValue = analogRead(A0);
+    float voltage = sensorValue * (5.0 / 1023.0);
+    
+    #if DEBUG == 1
+      if (voltage < 4.5) {
+        debug_print("WARNING: Low voltage: ");
+        debug_println_var(voltage);
+      }
+    #endif
+  }
 }
 
 void handleAttractState() {
@@ -97,20 +125,42 @@ void handleAttractState() {
   }
 }
 
+
 void handleGameRunState() {
-  if (stateChanged) {
-    nggPinduno.adrLED1()->colorRGB(128, 128, 128);
-    stateChanged = false;
-    lastRefreshTime = millis();
-    debug_println("Entering GAME_RUN mode");
-  }
-  
-  #if DEBUG == 1
-    if (millis() - lastRefreshTime >= 1000) {
-      debug_println("Maintaining GAME_RUN state");
-      lastRefreshTime = millis();
+    if (stateChanged) {
+        // Validate and set color
+        uint8_t r = constrain(128, 0, 255);
+        uint8_t g = constrain(128, 0, 255);
+        uint8_t b = constrain(128, 0, 255);
+        
+        nggPinduno.adrLED1()->colorRGB(r, g, b);
+        nggPinduno.adrLED1()->show(true);  // Force initial update
+        stateChanged = false;
+        
+        #if DEBUG == 1
+            debug_println("GAME_RUN initialized with forced color update");
+        #endif
     }
-  #endif
+}
+
+void maintainLEDs() {
+    static uint32_t lastColor = 0;
+    uint32_t currentColor = nggPinduno.adrLED1()->getPixelColor(0);
+    
+    // Only refresh if color changed or 50ms passed
+    if (currentColor != lastColor || millis() - lastRefreshTime >= 50) {
+        nggPinduno.adrLED1()->show(true);  // Force refresh
+        lastColor = currentColor;
+        lastRefreshTime = millis();
+        
+        #if DEBUG == 1
+            static unsigned long lastDebug = 0;
+            if (millis() - lastDebug >= 1000) {
+                lastDebug = millis();
+                debug_println("LED refresh maintained");
+            }
+        #endif
+    }
 }
 
 void handleEffectActiveState() {
@@ -119,18 +169,11 @@ void handleEffectActiveState() {
     debug_println("Entering EFFECT_ACTIVE mode");
   }
   
-  // Handle simple effect timeout
   if (currentEffectColor != "" && (millis() - effectStartTime >= effectDuration)) {
     currentState = GAME_RUN;
     stateChanged = true;
     currentEffectColor = "";
-  }
-}
-
-void maintainLEDs() {
-  if (millis() - lastRefreshTime >= refreshInterval) {
-    nggPinduno.adrLED1()->show();
-    lastRefreshTime = millis();
+    debug_println("Effect completed - Returning to GAME_RUN");
   }
 }
 
@@ -144,11 +187,9 @@ void selectNextAttractColor() {
     }
   }
   
-  // Reset tracking if all colors shown
+  // Reset tracking if needed
   if (allShown) {
-    for (int i = 0; i < 3; i++) {
-      colorsShown[i] = false;
-    }
+    for (int i = 0; i < 3; i++) colorsShown[i] = false;
   }
   
   // Select random unseen color
@@ -157,20 +198,18 @@ void selectNextAttractColor() {
   
   for (int i = 0; i < 3; i++) {
     if (!colorsShown[i]) {
-      availableIndices[availableColors] = i;
-      availableColors++;
+      availableIndices[availableColors++] = i;
     }
   }
   
   if (availableColors > 0) {
-    int selected = random(availableColors);
-    attractColorIndex = availableIndices[selected];
+    attractColorIndex = availableIndices[random(availableColors)];
     currentAttractColor = attractColors[attractColorIndex];
     colorsShown[attractColorIndex] = true;
     
     #if DEBUG == 1
-      Serial.print("New attract color: ");
-      Serial.println(currentAttractColor);
+      debug_print("New attract color: ");
+      debug_println_var(currentAttractColor);
     #endif
   }
 }
@@ -198,35 +237,52 @@ void checkPinStates() {
   if (currentState == GAME_RUN || currentState == EFFECT_ACTIVE) {
     // Simple Effects
     if (nggPinduno.pinState()->J126(12)) { // Blue
+      nggPinduno.adrLED1()->color("blue");
       triggerEffect("blue");
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(11)) { // Red
+      nggPinduno.adrLED1()->color("red");
       triggerEffect("red");
       trigger = 1;
     }
     // Complex Effects
     else if (nggPinduno.pinState()->J126(10)) { // Green/Red animation
+      currentState = EFFECT_ACTIVE;
+      stateChanged = true;
       nggPinduno.adrLED1()->bullet2Color("green", "red", 20, 2, 1);
+      currentState = GAME_RUN;
+      stateChanged = true;
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(9)) { // White/Green animation
+      currentState = EFFECT_ACTIVE;
+      stateChanged = true;
       nggPinduno.adrLED1()->bulletFromPoint2Color("white", "green", 17, 5, 17);
+      currentState = GAME_RUN;
+      stateChanged = true;
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(7)) { // Green/White animation
+      currentState = EFFECT_ACTIVE;
+      stateChanged = true;
       nggPinduno.adrLED1()->bulletFromPoint2Color("green", "white", 17, 5, 17);
+      currentState = GAME_RUN;
+      stateChanged = true;
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(6)) { // Green
+      nggPinduno.adrLED1()->color("green");
       triggerEffect("green");
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(5)) { // Red
+      nggPinduno.adrLED1()->color("red");
       triggerEffect("red");
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(4)) { // Blue
+      nggPinduno.adrLED1()->color("blue");
       triggerEffect("blue");
       trigger = 1;
     }
@@ -250,11 +306,10 @@ void triggerEffect(String color) {
   stateChanged = true;
   currentEffectColor = color;
   effectStartTime = millis();
-  nggPinduno.adrLED1()->color(color);
   
   #if DEBUG == 1
-    Serial.print("Triggering effect: ");
-    Serial.println(color);
+    debug_print("Triggering effect: ");
+    debug_println_var(color);
   #endif
 }
 

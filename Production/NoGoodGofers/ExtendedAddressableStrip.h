@@ -8,7 +8,8 @@ class ExtendedAddressableStrip : public AddressableStrip {
 public:
     ExtendedAddressableStrip(int num, int pin, pinduinoPins* pinState);
     void setBrightness(uint8_t newBrightnessValue);
-    void show(); // New method declaration
+    void show(bool force = false);  // Added force parameter
+    uint32_t getPixelColor(uint16_t n);  // Added for color tracking
 };
 
 #endif
