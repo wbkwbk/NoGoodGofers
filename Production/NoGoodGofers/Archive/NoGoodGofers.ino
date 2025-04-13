@@ -60,7 +60,7 @@ enum LEDState { ATTRACT, WHITE_IDLE, EFFECT_ACTIVE };
 LEDState ledState = ATTRACT;
 
 // === Variables ===
-unsigned long lastTriggerTime = 0;
+unsigned long lasteffectOccuredTime = 0;
 unsigned long timeLastEvent = 0;
 unsigned long effectStartTime = 0;
 unsigned long lastAttractColorChange = 0;
@@ -105,7 +105,7 @@ static const char* colorList[NUM_COLORS] = {"green", "lime", "yellow", "sky", "b
 // === Function Prototypes ===
 void setToIdleColor(bool fade = true);
 void handleAttractMode(bool newGame);
-void handleWhiteIdleMode(bool hadTrigger);
+void handleWhiteIdleMode(bool hadeffectOccured);
 void handleEffectActiveMode();
 bool checkPinStates();
 bool isDelayOver();
@@ -156,7 +156,7 @@ void loop() {
   //readPotentiometer();
   nggPinduno.pinState()->update();
   bool newGame = (!gameActive && checkForNewGame());
-  bool hadTrigger = checkPinStates();
+  bool hadeffectOccured = checkPinStates();
 
   switch (ledState) {
     case ATTRACT:
@@ -164,7 +164,7 @@ void loop() {
       break;
       
     case WHITE_IDLE:
-      handleWhiteIdleMode(hadTrigger);
+      handleWhiteIdleMode(hadeffectOccured);
       break;
       
     case EFFECT_ACTIVE:
@@ -284,7 +284,7 @@ void handleAttractMode(bool newGame) {
 
   if (newGame) {
     gameActive = true;
-    checkPinStates(); // Trigger initial effect immediately
+    checkPinStates(); // effectOccured initial effect immediately
     ledState = WHITE_IDLE;
     setToIdleColor();
     timeLastEvent = millis();
@@ -292,10 +292,10 @@ void handleAttractMode(bool newGame) {
   }
 }
 
-void handleWhiteIdleMode(bool hadTrigger) {
+void handleWhiteIdleMode(bool hadeffectOccured) {
   setToIdleColor(false);
   
-  if (hadTrigger) {
+  if (hadeffectOccured) {
     timeLastEvent = millis();
   } 
   else if (millis() - timeLastEvent > attractTimeout) {
@@ -424,18 +424,18 @@ void resetColors() {
   DEBUG_PRINTLN("Reset colors");
 }
 
-// === Pin Trigger Handling ===
+// === Pin effectOccured Handling ===
 bool checkPinStates() {
-  static int trigger = 0;
+  static int effectOccured = 0;
 
   if (isDelayOver()) {
     if (nggPinduno.pinState()->J126(12)) {
       handleSimpleEffect(0, 0, 255, "colorRGB (Start button or tilt) with color: blue");
-      trigger = 1;
+      effectOccured = 1;
     }
     else if (nggPinduno.pinState()->J126(11)) {
       handleSimpleEffect(255, 0, 0, "colorRGB (Game over or error) with color: red");
-      trigger = 1;
+      effectOccured = 1;
     }
     else if (nggPinduno.pinState()->J126(10)) {
       DEBUG_PRINTLN("Effect: fadeOut");
@@ -478,7 +478,7 @@ bool checkPinStates() {
           nggPinduno.adrLED1()->spreadInFromPoint(aLEDNum1 / 2, color1, 1000);
           break;
       }
-      trigger = 1;
+      effectOccured = 1;
     }
     else if (nggPinduno.pinState()->J126(9)) {
       DEBUG_PRINTLN("Effect: fadeOut");
@@ -518,7 +518,7 @@ bool checkPinStates() {
           nggPinduno.adrLED1()->spreadInFromPoint2Color(aLEDNum1 / 2, color1, color2, 1000);
           break;
       }
-      trigger = 1;
+      effectOccured = 1;
     }
     else if (nggPinduno.pinState()->J126(7)) {
       DEBUG_PRINTLN("Effect: fadeOut");
@@ -555,25 +555,25 @@ bool checkPinStates() {
           nggPinduno.adrLED1()->spreadInFromPoint2RGB(aLEDNum1 / 2, r1, g1, b1, r2, g2, b2, 1000);
           break;
       }
-      trigger = 1;
+      effectOccured = 1;
     }
     else if (nggPinduno.pinState()->J126(6)) {
       handleSimpleEffect(0, 255, 0, "colorRGB (Minor score) with color: green");
-      trigger = 1;
+      effectOccured = 1;
     }
     else if (nggPinduno.pinState()->J126(5)) {
       handleSimpleEffect(255, 0, 0, "colorRGB (Hazard or miss) with color: red");
-      trigger = 1;
+      effectOccured = 1;
     }
     else if (nggPinduno.pinState()->J126(4)) {
       handleSimpleEffect(0, 0, 255, "colorRGB (Bonus) with color: blue");
-      trigger = 1;
+      effectOccured = 1;
     }
 
-    if (trigger) {
+    if (effectOccured) {
       nggPinduno.pinState()->reset();
       timeLastEvent = millis();
-      trigger = 0;
+      effectOccured = 0;
       if (ledState != EFFECT_ACTIVE) {
         ledState = WHITE_IDLE;
         setToIdleColor();
@@ -596,8 +596,8 @@ void handleSimpleEffect(uint8_t r, uint8_t g, uint8_t b, const char* effectDescr
 
 // === Delay Timer Check ===
 bool isDelayOver() {
-  if (millis() - lastTriggerTime >= DELAYTIME) {
-    lastTriggerTime = millis();
+  if (millis() - lasteffectOccuredTime >= DELAYTIME) {
+    lasteffectOccuredTime = millis();
     return true;
   }
   return false;
