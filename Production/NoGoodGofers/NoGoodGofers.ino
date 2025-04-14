@@ -204,7 +204,7 @@ void checkPinStates() {
         case 2:
           // Set color and use correct spreadOutToPoint parameters
           nggPinduno.adrLED1()->color(color1);
-          nggPinduno.adrLED1()->spreadOutToPoint(0, 1400);
+          nggPinduno.adrLED1()->spreadOutToPoint(0, 1600);
           break;
         case 3:
           nggPinduno.adrLED1()->spreadInFromPoint2Color(1, color1, color2, 1000);
