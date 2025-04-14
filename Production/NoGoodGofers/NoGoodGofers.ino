@@ -198,12 +198,12 @@ void checkVoltage() {
     lastVoltageCheck = millis();
     float voltage = readVoltage();
     
-    debug_print("System Voltage: ");
-    debug_print_var(voltage);
-    debug_println("V");
+    //debug_print("System Voltage: ");
+    //debug_print_var(voltage);
+    //debug_println("V");
     
     if (voltage < 4.5) {
-      debug_println("WARNING: Low voltage detected!");
+      //debug_println("WARNING: Low voltage detected!");
     }
   }
 }
@@ -250,7 +250,7 @@ void maintainLEDs() {
     static unsigned long lastDebug = 0;
     if (millis() - lastDebug >= 1000) {
       lastDebug = millis();
-      debug_println("LED refresh maintained");
+      //debug_println("LED refresh maintained");
     }
   }
 }
