@@ -27,6 +27,7 @@
 const int aLEDNum1 = 80;
 const int aLEDNum2 = 0;
 const int aLEDNum3 = 0;
+const char EFFECTFINISHED = "";
 pinduinoext nggPinduno(aLEDNum1, aLEDNum2, aLEDNum3, "Nano");
 
 // Timing Constants
@@ -161,17 +162,18 @@ void handleEffectActiveState() {
     stateChanged = false;
     debug_println("Entering EFFECT_ACTIVE mode");
   }
-  //currentEffectColor != "" means simple effect is running
-  if (isEffectrunning() && (millis() - effectStartTime >= effectDuration)) {
+ 
+  if (isNOEffectrunning() || (millis() - effectStartTime >= effectDuration)) {
     currentState = GAME_RUN;
     stateChanged = true;
-    currentEffectColor = "";
+    currentEffectColor = EFFECTFINISHED;
     debug_println("Effect completed - Returning to GAME_RUN");
   }
 }
 
-boolean isEffectrunning(){
-  return currentEffectColor != "";
+boolean isNOEffectrunning(){
+   //currentEffectColor != "" means effect is running
+  return currentEffectColor == EFFECTFINISHED;
 }
 
 void checkPinStates() {
@@ -210,7 +212,7 @@ void checkPinStates() {
           nggPinduno.adrLED1()->spreadInFromPoint2Color(1, color1, color2, 1000);
           break;
       }
-      currentEffectColor = color1; // For state tracking
+      currentEffectColor = EFFECTFINISHED; // For state tracking
       effectStartTime = millis();
       trigger = 1;
       debug_print("J126(10) Effect ");
@@ -244,7 +246,7 @@ void checkPinStates() {
           nggPinduno.adrLED1()->spreadInFromPoint2Color(1, color1, color2, 1000);
           break;
       }
-      currentEffectColor = color1;
+      currentEffectColor = EFFECTFINISHED;
       effectStartTime = millis();
       trigger = 1;
       debug_print("J126(9) Effect ");
@@ -266,7 +268,7 @@ void checkPinStates() {
         case 0:
           nggPinduno.adrLED1()->rainbow(1); // Uses color1 for consistency
           break;
-        case 1:qa
+        case 1:
           nggPinduno.adrLED1()->rainbowCycle(1);
           break;
         case 2:
@@ -274,7 +276,7 @@ void checkPinStates() {
           nggPinduno.adrLED1()->spreadInFromPoint2Color(1, color1, color1, 1000);
           break;
       }
-      currentEffectColor = color1;
+      currentEffectColor = EFFECTFINISHED;
       effectStartTime = millis();
       trigger = 1;
       debug_print("J126(7) Effect ");
