@@ -264,10 +264,10 @@ void checkPinStates() {
       // Execute effect
       switch (effectIndex) {
         case 0:
-          nggPinduno.adrLED1()->rainbow(8); // Uses color1 for consistency
+          nggPinduno.adrLED1()->rainbow(1); // Uses color1 for consistency
           break;
-        case 1:
-          nggPinduno.adrLED1()->rainbowCycle(8);
+        case 1:qa
+          nggPinduno.adrLED1()->rainbowCycle(1);
           break;
         case 2:
           // Use spreadInFromPoint2Color with color1
@@ -459,7 +459,7 @@ void maintainLEDs() {
     static unsigned long lastDebug = 0;
     if (millis() - lastDebug >= 1000) {
       lastDebug = millis();
-      debug_println("LED refresh maintained");
+      //debug_println("LED refresh maintained");
     }
   }
 }
