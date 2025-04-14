@@ -15,26 +15,28 @@ The program shows the attract color 5 seconds then changes it.
 it cycles through each attract color exactly once in random order before repeating
 those are the attract colors green, blue, red
 
+can you please modify the programm accordingly
+
+
 can you please assign according the following description for each J126(x) the according effects listed under each J126(x) event
 Please write the pogram so that everytime the J126(x) is triggred an effect is dynamically choosen from the according J126(x) list. 
 Each effect is used once until each effect for each J126(x) is unsed once
 Please assign dynmaically and randomly the following colors to the dynamcially chosen effect: red, green, blue, yellow, cyan, purple, white, orange, lime, sky, mint, magenta, lavender 
 until each color is used once then start using them again
+Please leave the other parameters as provided in the specification, just replace the colors. The colors are the string parameter values in ""
 
 J126(10)
 	nggPinduno.adrLED1()->bullet2Color("green", "red", 20, 2, 1); // Blocking
-	bulletFromPoint2Color	
-	chase2RGBFromPoint
-	spreadInFromPoint 
+	nggPinduno.adrLED1()->bulletFromPoint2Color("white", "white", 5, 2, 75);	
+	nggPinduno.adrLED1()->spreadOutToPoint(0,255, 0, 0, 300);
+	nggPinduno.adrLED1()->spreadInFromPoint2Color (1, "red", "orange", 500); 
 
 J126(9)) {
       nggPinduno.adrLED1()->bullet2Color("green", "red", 20, 2, 1); // Blocking
-      dataStream
-	  dataStreamRGB
-	  spreadInFromPoint2Color 
+      nggPinduno.adrLED1()->dataStreamNoTail2Color("blue", "mint", 20, 20, 1);
+	  nggPinduno.adrLED1()->spreadInFromPoint2Color (1, "red", "orange", 500); 
 J126(7)
-	rainbow 
-	rainbowCycle 
-	RGBBullet 
-	spreadInFromPoint2RGB 
+	nggPinduno.adrLED1()->rainbow(80); 
+	nggPinduno.adrLED1()->rainbowCycle(80)  
+	nggPinduno.adrLED1()->spreadInFromPoint2RGB (1, 50,50,50, 0,0,255, 300); 
 

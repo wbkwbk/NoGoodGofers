@@ -1,5 +1,7 @@
 // No Good Gophers - Final Stable Implementation with Voltage Monitoring
-// Complete solution with reliable LED control and working voltage check
+// Modified for dynamic effect and color selection for J126(10), J126(9), J126(7)
+// Fixed spreadOutToPoint for J126(10) to use correct parameters and dynamic color
+// Removed redundant #if DEBUG == 1 directives for debug output (handled by macros)
 
 #include "pinduinoext.h"
 
@@ -54,12 +56,93 @@ const int VOLTAGE_PIN = A0;
 const float VOLTAGE_DIVIDER_RATIO = 2.0; // Adjust based on your voltage divider
 const float REFERENCE_VOLTAGE = 5.0;
 
+// Effect and Color Tracking
+const int NUM_COLORS = 13;
+const String availableColors[] = {"red", "green", "blue", "yellow", "cyan", "purple", "white", "orange", "lime", "sky", "mint", "magenta", "lavender"};
+bool colorsUsed[NUM_COLORS] = {false}; // Tracks used colors
+const int NUM_J126_10_EFFECTS = 4;
+bool j126_10_effectsUsed[NUM_J126_10_EFFECTS] = {false}; // Tracks J126(10) effects
+const int NUM_J126_9_EFFECTS = 3;
+bool j126_9_effectsUsed[NUM_J126_9_EFFECTS] = {false}; // Tracks J126(9) effects
+const int NUM_J126_7_EFFECTS = 3;
+bool j126_7_effectsUsed[NUM_J126_7_EFFECTS] = {false}; // Tracks J126(7) effects
+
+// Select random unused color
+String getRandomColor() {
+  // Check if all colors used
+  bool allUsed = true;
+  for (int i = 0; i < NUM_COLORS; i++) {
+    if (!colorsUsed[i]) {
+      allUsed = false;
+      break;
+    }
+  }
+  // Reset if all used
+  if (allUsed) {
+    for (int i = 0; i < NUM_COLORS; i++) {
+      colorsUsed[i] = false;
+    }
+    debug_println("All colors used, resetting color tracking");
+  }
+  // Count available colors
+  int availableCount = 0;
+  int availableIndices[NUM_COLORS];
+  for (int i = 0; i < NUM_COLORS; i++) {
+    if (!colorsUsed[i]) {
+      availableIndices[availableCount++] = i;
+    }
+  }
+  // Select random available color
+  if (availableCount > 0) {
+    int selectedIndex = availableIndices[random(availableCount)];
+    colorsUsed[selectedIndex] = true;
+    debug_print("Selected color: ");
+    debug_println_var(availableColors[selectedIndex]);
+    return availableColors[selectedIndex];
+  }
+  return "white"; // Fallback
+}
+
+// Select random unused effect for J126(x)
+int getRandomEffect(bool* effectsUsed, int numEffects) {
+  // Check if all effects used
+  bool allUsed = true;
+  for (int i = 0; i < numEffects; i++) {
+    if (!effectsUsed[i]) {
+      allUsed = false;
+      break;
+    }
+  }
+  // Reset if all used
+  if (allUsed) {
+    for (int i = 0; i < numEffects; i++) {
+      effectsUsed[i] = false;
+    }
+    debug_println("All effects used, resetting effect tracking");
+  }
+  // Count available effects
+  int availableCount = 0;
+  int availableIndices[numEffects];
+  for (int i = 0; i < numEffects; i++) {
+    if (!effectsUsed[i]) {
+      availableIndices[availableCount++] = i;
+    }
+  }
+  // Select random available effect
+  if (availableCount > 0) {
+    int selectedIndex = availableIndices[random(availableCount)];
+    effectsUsed[selectedIndex] = true;
+    return selectedIndex;
+  }
+  return 0; // Fallback
+}
+
 void setup() {
   #if DEBUG == 1
     Serial.begin(115200);
-    debug_println("System Initializing...");
-    debug_println("LED Control v3.1 - With Voltage Monitoring");
   #endif
+  debug_println("System Initializing...");
+  debug_println("LED Control v3.1 - With Voltage Monitoring");
 
   // Power stabilization
   delay(500);
@@ -77,13 +160,6 @@ void setup() {
   nggPinduno.adrLED1()->show(true);
   
   debug_println("Initialization Complete");
-}
-
-
-float readVoltage() {
-  int rawValue = analogRead(VOLTAGE_PIN);
-  float voltage = (rawValue * REFERENCE_VOLTAGE) / 1023.0;
-  return voltage * VOLTAGE_DIVIDER_RATIO;
 }
 
 void loop() {
@@ -111,21 +187,24 @@ void loop() {
   checkPinStates();
 }
 
+float readVoltage() {
+  int rawValue = analogRead(VOLTAGE_PIN);
+  float voltage = (rawValue * REFERENCE_VOLTAGE) / 1023.0;
+  return voltage * VOLTAGE_DIVIDER_RATIO;
+}
 
 void checkVoltage() {
   if (millis() - lastVoltageCheck > voltageCheckInterval) {
     lastVoltageCheck = millis();
     float voltage = readVoltage();
     
-    #if DEBUG == 1
-      debug_print("System Voltage: ");
-      debug_print_var(voltage);
-      debug_println("V");
-      
-      if (voltage < 4.5) {
-        debug_println("WARNING: Low voltage detected!");
-      }
-    #endif
+    debug_print("System Voltage: ");
+    debug_print_var(voltage);
+    debug_println("V");
+    
+    if (voltage < 4.5) {
+      debug_println("WARNING: Low voltage detected!");
+    }
   }
 }
 
@@ -143,42 +222,37 @@ void handleAttractState() {
   }
 }
 
-
 void handleGameRunState() {
-    if (stateChanged) {
-        // Validate and set color
-        uint8_t r = constrain(128, 0, 255);
-        uint8_t g = constrain(128, 0, 255);
-        uint8_t b = constrain(128, 0, 255);
-        
-        nggPinduno.adrLED1()->colorRGB(r, g, b);
-        nggPinduno.adrLED1()->show(true);  // Force initial update
-        stateChanged = false;
-        
-        #if DEBUG == 1
-            debug_println("GAME_RUN initialized with forced color update");
-        #endif
-    }
+  if (stateChanged) {
+    // Validate and set color
+    uint8_t r = constrain(128, 0, 255);
+    uint8_t g = constrain(128, 0, 255);
+    uint8_t b = constrain(128, 0, 255);
+    
+    nggPinduno.adrLED1()->colorRGB(r, g, b);
+    nggPinduno.adrLED1()->show(true);  // Force initial update
+    stateChanged = false;
+    
+    debug_println("GAME_RUN initialized with forced color update");
+  }
 }
 
 void maintainLEDs() {
-    static uint32_t lastColor = 0;
-    uint32_t currentColor = nggPinduno.adrLED1()->getPixelColor(0);
+  static uint32_t lastColor = 0;
+  uint32_t currentColor = nggPinduno.adrLED1()->getPixelColor(0);
+  
+  // Only refresh if color changed or 50ms passed
+  if (currentColor != lastColor || millis() - lastRefreshTime >= 50) {
+    nggPinduno.adrLED1()->show(true);  // Force refresh
+    lastColor = currentColor;
+    lastRefreshTime = millis();
     
-    // Only refresh if color changed or 50ms passed
-    if (currentColor != lastColor || millis() - lastRefreshTime >= 50) {
-        nggPinduno.adrLED1()->show(true);  // Force refresh
-        lastColor = currentColor;
-        lastRefreshTime = millis();
-        
-        #if DEBUG == 1
-            static unsigned long lastDebug = 0;
-            if (millis() - lastDebug >= 1000) {
-                lastDebug = millis();
-                debug_println("LED refresh maintained");
-            }
-        #endif
+    static unsigned long lastDebug = 0;
+    if (millis() - lastDebug >= 1000) {
+      lastDebug = millis();
+      debug_println("LED refresh maintained");
     }
+  }
 }
 
 void handleEffectActiveState() {
@@ -225,10 +299,8 @@ void selectNextAttractColor() {
     currentAttractColor = attractColors[attractColorIndex];
     colorsShown[attractColorIndex] = true;
     
-    #if DEBUG == 1
-      debug_print("New attract color: ");
-      debug_println_var(currentAttractColor);
-    #endif
+    debug_print("New attract color: ");
+    debug_println_var(currentAttractColor);
   }
 }
 
@@ -253,8 +325,105 @@ void checkPinStates() {
   }
   
   if (currentState == GAME_RUN || currentState == EFFECT_ACTIVE) {
-    // Simple Effects
-    if (nggPinduno.pinState()->J126(12)) { // Blue
+    // Dynamic effect and color selection for J126(10), J126(9), J126(7)
+    if (nggPinduno.pinState()->J126(10)) {
+      currentState = EFFECT_ACTIVE;
+      stateChanged = true;
+      // Select random unused effect
+      int effectIndex = getRandomEffect(j126_10_effectsUsed, NUM_J126_10_EFFECTS);
+      // Get random colors
+      String color1 = getRandomColor();
+      String color2 = getRandomColor();
+      // Execute effect
+      switch (effectIndex) {
+        case 0:
+          nggPinduno.adrLED1()->bullet2Color(color1, color2, 20, 2, 1);
+          break;
+        case 1:
+          nggPinduno.adrLED1()->bulletFromPoint2Color(color1, color2, 5, 2, 75);
+          break;
+        case 2:
+          // Set color and use correct spreadOutToPoint parameters
+          nggPinduno.adrLED1()->color(color1);
+          nggPinduno.adrLED1()->spreadOutToPoint(0, 300);
+          break;
+        case 3:
+          nggPinduno.adrLED1()->spreadInFromPoint2Color(1, color1, color2, 500);
+          break;
+      }
+      currentEffectColor = color1; // For state tracking
+      effectStartTime = millis();
+      trigger = 1;
+      debug_print("J126(10) Effect ");
+      debug_print_dec(effectIndex);
+      debug_print(" with colors ");
+      debug_print_var(color1);
+      if (effectIndex != 2) { // spreadOutToPoint uses single color
+        debug_print(", ");
+        debug_print_var(color2);
+      }
+      debug_println("");
+    }
+    else if (nggPinduno.pinState()->J126(9)) {
+      currentState = EFFECT_ACTIVE;
+      stateChanged = true;
+      // Select random unused effect
+      int effectIndex = getRandomEffect(j126_9_effectsUsed, NUM_J126_9_EFFECTS);
+      // Get random colors
+      String color1 = getRandomColor();
+      String color2 = getRandomColor();
+      // Execute effect
+      switch (effectIndex) {
+        case 0:
+          nggPinduno.adrLED1()->bullet2Color(color1, color2, 20, 2, 1);
+          break;
+        case 1:
+          nggPinduno.adrLED1()->dataStreamNoTail2Color(color1, color2, 20, 20, 1);
+          break;
+        case 2:
+          nggPinduno.adrLED1()->spreadInFromPoint2Color(1, color1, color2, 500);
+          break;
+      }
+      currentEffectColor = color1;
+      effectStartTime = millis();
+      trigger = 1;
+      debug_print("J126(9) Effect ");
+      debug_print_dec(effectIndex);
+      debug_print(" with colors ");
+      debug_print_var(color1);
+      debug_print(", ");
+      debug_println_var(color2);
+    }
+    else if (nggPinduno.pinState()->J126(7)) {
+      currentState = EFFECT_ACTIVE;
+      stateChanged = true;
+      // Select random unused effect
+      int effectIndex = getRandomEffect(j126_7_effectsUsed, NUM_J126_7_EFFECTS);
+      // Get random color (single color for simplicity)
+      String color1 = getRandomColor();
+      // Execute effect
+      switch (effectIndex) {
+        case 0:
+          nggPinduno.adrLED1()->rainbow(80); // Uses color1 for consistency
+          break;
+        case 1:
+          nggPinduno.adrLED1()->rainbowCycle(80);
+          break;
+        case 2:
+          // Use spreadInFromPoint2Color with color1
+          nggPinduno.adrLED1()->spreadInFromPoint2Color(1, color1, color1, 300);
+          break;
+      }
+      currentEffectColor = color1;
+      effectStartTime = millis();
+      trigger = 1;
+      debug_print("J126(7) Effect ");
+      debug_print_dec(effectIndex);
+      debug_print(" with color ");
+      debug_println_var(color1);
+    }
+    // Existing triggers for other pins
+    else if (nggPinduno.pinState()->J126(12)) { // Blue
       nggPinduno.adrLED1()->color("blue");
       triggerEffect("blue");
       trigger = 1;
@@ -262,31 +431,6 @@ void checkPinStates() {
     else if (nggPinduno.pinState()->J126(11)) { // Red
       nggPinduno.adrLED1()->color("red");
       triggerEffect("red");
-      trigger = 1;
-    }
-    // Complex Effects
-    else if (nggPinduno.pinState()->J126(10)) { // Green/Red animation
-      currentState = EFFECT_ACTIVE;
-      stateChanged = true;
-      nggPinduno.adrLED1()->bullet2Color("green", "red", 20, 2, 1);
-      currentState = GAME_RUN;
-      stateChanged = true;
-      trigger = 1;
-    }
-    else if (nggPinduno.pinState()->J126(9)) { // White/Green animation
-      currentState = EFFECT_ACTIVE;
-      stateChanged = true;
-      nggPinduno.adrLED1()->bulletFromPoint2Color("white", "green", 17, 5, 17);
-      currentState = GAME_RUN;
-      stateChanged = true;
-      trigger = 1;
-    }
-    else if (nggPinduno.pinState()->J126(7)) { // Green/White animation
-      currentState = EFFECT_ACTIVE;
-      stateChanged = true;
-      nggPinduno.adrLED1()->bulletFromPoint2Color("green", "white", 17, 5, 17);
-      currentState = GAME_RUN;
-      stateChanged = true;
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(6)) { // Green
@@ -325,34 +469,6 @@ void triggerEffect(String color) {
   currentEffectColor = color;
   effectStartTime = millis();
   
-  #if DEBUG == 1
-    debug_print("Triggering effect: ");
-    debug_println_var(color);
-  #endif
+  debug_print("Triggering effect: ");
+  debug_println_var(color);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
