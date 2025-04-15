@@ -44,6 +44,7 @@ J126(7)
 
 Button
 Please enhance the following program by this specification:
+The current states remain as they are the new states have to be incorperated correctly to the existing states. They are like a layer above the existing states.
 There are two simple press buttons to be observed. Their status is: Pressed/Not Pressed. Those are the hardware buttons: ttps://www.bastelgarage.ch/m5stack-mini-dual-button-unit?search=m5stack%20mini%20dual%20button%20unit
 Button connection to Arduino Nano	
 	Red Button connected to D10
@@ -61,6 +62,7 @@ The following Events must be handled properly
 		IF the game  is in state NO_LED button press has no effect
 	3. Blue button long pressed, longer then one second game enters in state	
 		SET_BRIGHTNESS
+			when entering SET_BRIGHTNESS state the led strip color is set to red
 			a counter starts after one second, the counter variable is called brightness. 
 			The counter is incremented every 50ms until 255 is reached, then it starts again at one.
 			Every time the counter is increased the brightness of the LED stripe is set to the according brightness value
