@@ -36,7 +36,36 @@ J126(9)) {
       nggPinduno.adrLED1()->dataStreamNoTail2Color("blue", "mint", 20, 20, 1);
 	  nggPinduno.adrLED1()->spreadInFromPoint2Color (1, "red", "orange", 500); 
 J126(7)
-	nggPinduno.adrLED1()->rainbow(80); 
-	nggPinduno.adrLED1()->rainbowCycle(80)  
+	nggPinduno.adrLED1()->rainbow(1); 
+	nggPinduno.adrLED1()->rainbowCycle(1)  
 	nggPinduno.adrLED1()->spreadInFromPoint2RGB (1, 50,50,50, 0,0,255, 300); 
+
+
+
+Button
+Please enhance the following program by this specification:
+There are two simple press buttons to be observed. Their status is: Pressed/Not Pressed. Those are the hardware buttons: ttps://www.bastelgarage.ch/m5stack-mini-dual-button-unit?search=m5stack%20mini%20dual%20button%20unit
+Button connection to Arduino Nano	
+	Red Button connected to D10
+	Blue Button connected to D11
+Per default, when the program starts, the Game State is NO_LED which means game is not in  ATTRACT, GAME_RUN, EFFECT_ACTIVE state. 
+	NO_LED means the led stripe is off - dark
+The following Events must be handled properly
+	1. Red Button Pressed toggles Game States between NO_LED/ALL_LED
+		ALL_LED means the game can enter all states ATTRACT, GAME_RUN, EFFECT_ACTIVE 
+		NO_LED means game cannot enter any of those states ATTRACT, GAME_RUN, EFFECT_ACTIVE,  the led stripe is off - dark
+	2. Blue Button pressed
+		If the blue button is pressed and the game is in state ALL_LED this button toggles between
+			ALL_LED_ALL_STATES -> game can enter all states ATTRACT, GAME_RUN, EFFECT_ACTIVE 
+			ALL_LED_RUN_ONLY -> game will immediatley enter GAME_RUN state where the LED will be light with a constant RGB 128,128,128
+		IF the game  is in state NO_LED button press has no effect
+	3. Blue button long pressed, longer then one second game enters in state	
+		SET_BRIGHTNESS
+			a counter starts after one second, the counter variable is called brightness. 
+			The counter is incremented every 50ms until 255 is reached, then it starts again at one.
+			Every time the counter is increased the brightness of the LED stripe is set to the according brightness value
+			This continues until the button is released again. The current value is then saved.
+			When the  button is released the games goes back to it's previous state
+	4. Red Button double click - two clicks within one second:
+		The game immediately goes to ALL_LED state, the brightness is set to 255.
 
