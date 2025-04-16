@@ -32,8 +32,8 @@ const String EFFECTFINISHED = "";
 pinduinoext nggPinduno(aLEDNum1, aLEDNum2, aLEDNum3, "Nano");
 
 // Button Configuration
-const int RED_BUTTON_PIN = 10;   // D10
-const int BLUE_BUTTON_PIN = 11;  // D11
+const int RED_BUTTON_PIN = 10;   // D10 - Yellow Wire
+const int BLUE_BUTTON_PIN = 11;  // D11 - White Whire
 const unsigned long DEBOUNCE_DELAY = 50;
 const unsigned long LONG_PRESS_DURATION = 1000;  // 1s
 const unsigned long DOUBLE_CLICK_WINDOW = 1000;  // 1s
