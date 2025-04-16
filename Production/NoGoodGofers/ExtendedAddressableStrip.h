@@ -10,6 +10,9 @@ public:
     void setBrightness(uint8_t newBrightnessValue);
     void show(bool force = false);  // Added force parameter
     uint32_t getPixelColor(uint16_t n);  // Added for color tracking
+    // Überschriebene Methoden
+    void rainbow(int wait);
+    void rainbowCycle(int wait);
 };
 
 #endif
