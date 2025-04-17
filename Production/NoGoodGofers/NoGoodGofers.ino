@@ -33,8 +33,8 @@ const String EFFECTFINISHED = "";
 pinduinoext nggPinduno(aLEDNum1, aLEDNum2, aLEDNum3, "Nano");
 
 // Button Configuration
-const int RED_BUTTON_PIN = A6;   // A6 - Yellow Wire
-const int BLUE_BUTTON_PIN = A7;  // A7 - White Wire
+const int RED_BUTTON_PIN = 6;   // D6 - Yellow Wire, Red Button
+const int BLUE_BUTTON_PIN = 7;  // D7 - White Wire, Blue Button
 const unsigned long DEBOUNCE_DELAY = 50;
 const unsigned long LONG_PRESS_DURATION = 1000;  // 1s
 const unsigned long DOUBLE_CLICK_WINDOW = 1000;  // 1s
@@ -105,9 +105,7 @@ void setup() {
   debug_println("System Initializing...");
   debug_println("LED Control v3.1 - With Button Enhancements");
 
-  // Initialize Buttons
-  pinMode(RED_BUTTON_PIN, INPUT_PULLUP);
-  pinMode(BLUE_BUTTON_PIN, INPUT_PULLUP);
+
 
   // Power stabilization
   delay(500);
@@ -121,6 +119,11 @@ void setup() {
 
   selectNextAttractColor();  // Prepare for ALL_LED
   debug_println("Initialization Complete");
+
+  // Initialize Buttons
+  pinMode(RED_BUTTON_PIN, INPUT_PULLUP);
+  pinMode(BLUE_BUTTON_PIN, INPUT_PULLUP);
+
 }
 
 void loop() {
