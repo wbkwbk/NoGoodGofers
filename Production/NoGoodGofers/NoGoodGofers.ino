@@ -280,11 +280,11 @@ void handleAllLedRunOnlyState() {
 }
 
 void handleSetBrightnessState() {
-  if (stateChanged) {
-    brightness = 1;  // Start at 1
     nggPinduno.adrLED1()->color("red");  // Set LED strip to red
     nggPinduno.adrLED1()->setBrightness(brightness);
     nggPinduno.adrLED1()->show(true);
+  if (stateChanged) {
+    brightness = 1;  // Start at 1
     lastBrightnessUpdate = millis();
     stateChanged = false;
     debug_println("SET_BRIGHTNESS: Started with red color");
