@@ -1,30 +1,27 @@
 #ifndef PINDUINOEXT_H
 #define PINDUINOEXT_H
 
-#include <Arduino.h>
 #include "pinduino.h"
 #include "ExtendedAddressableStrip.h"
-#include "DataPort.h"
 
 class pinduinoext : public pinduino {
 public:
     // Constructor for Arduino Mega and Nano
     pinduinoext(int num1, int num2, int num3, String arduinoType);
 
-    // Methoden für LED-Strip und DataPort
+    // Override the adrLED methods to return ExtendedAddressableStrip objects
     ExtendedAddressableStrip* adrLED1();
-    pinduinoPins* pinState();
-    DataPort* port1();
+    ExtendedAddressableStrip* adrLED2();
+    ExtendedAddressableStrip* adrLED3();
 
 private:
-    // Extended addressable strip
+    // Extended addressable strips
     ExtendedAddressableStrip* extendedALED1;
-    // DataPort
-    DataPort* dataPort1;
-    // Pin state
-    pinduinoPins* _pinState;
-    // Helper function to initialize the strip and port
-    void initExtendedStrip(int num1, String arduinoType);
+    ExtendedAddressableStrip* extendedALED2;
+    ExtendedAddressableStrip* extendedALED3;
+
+    // Helper function to initialize the strips based on Arduino type
+    void initExtendedStrips(int num1, int num2, int num3, String arduinoType);
 };
 
 #endif

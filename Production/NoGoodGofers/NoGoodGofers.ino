@@ -1,11 +1,11 @@
 // No Good Gophers - Enhanced with Button Control
-// Integrates Red (D10) and Blue (D11) buttons for meta-state management
+// Integrates Red (A6) and Blue (A7) buttons for meta-state management
+// Uses original Pinduino pin D10 for LED strip (adrLED1)
 // New meta-states (NO_LED, ALL_LED, ALL_LED_RUN_ONLY, SET_BRIGHTNESS) layer above existing states
 // Preserves original ATTRACT, GAME_RUN, EFFECT_ACTIVE state machine
 // Implements single press, double-click, and long press detection
 // Updated: SET_BRIGHTNESS sets LED strip to red
 // Fixed: Blue Button single press toggles ALL_LED <-> ALL_LED_RUN_ONLY correctly
-// Anpassung: Nur adrLED1 an D12, strip()->begin() hinzugefügt, adrLED2/adrLED3 entfernt
 
 #include "pinduinoext.h"
 
@@ -33,8 +33,8 @@ const String EFFECTFINISHED = "";
 pinduinoext nggPinduno(aLEDNum1, aLEDNum2, aLEDNum3, "Nano");
 
 // Button Configuration
-const int RED_BUTTON_PIN = 10;   // D10 - Yellow Wire
-const int BLUE_BUTTON_PIN = 11;  // D11 - White Wire
+const int RED_BUTTON_PIN = A6;   // A6 - Yellow Wire
+const int BLUE_BUTTON_PIN = A7;  // A7 - White Wire
 const unsigned long DEBOUNCE_DELAY = 50;
 const unsigned long LONG_PRESS_DURATION = 1000;  // 1s
 const unsigned long DOUBLE_CLICK_WINDOW = 1000;  // 1s

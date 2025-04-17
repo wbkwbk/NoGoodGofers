@@ -3,38 +3,37 @@
 // Constructor for Arduino Mega and Nano
 pinduinoext::pinduinoext(int num1, int num2, int num3, String arduinoType)
     : pinduino(num1, num2, num3, arduinoType) {
-    // Initialize the extended addressable strip and DataPort
-    initExtendedStrip(num1, arduinoType);
+    // Initialize the extended addressable strips based on the Arduino type
+    initExtendedStrips(num1, num2, num3, arduinoType);
 }
 
-// Initialize the extended addressable strip and DataPort
-void pinduinoext::initExtendedStrip(int num1, String arduinoType) {
-    _pinState = pinState(); // Verwende geerbte pinState()-Methode
+// Initialize the extended addressable strips
+void pinduinoext::initExtendedStrips(int num1, int num2, int num3, String arduinoType) {
     if (arduinoType == "Mega") {
-        // Für Arduino Mega, verwende Pin A15
-        extendedALED1 = new ExtendedAddressableStrip(num1, 69, _pinState); // A15
-        dataPort1 = new DataPort(69); // A15
+        // For Arduino Mega, use analog pins A15, A14, A13
+        extendedALED1 = new ExtendedAddressableStrip(num1, 69, pinState()); // A15
+        extendedALED2 = new ExtendedAddressableStrip(num2, 68, pinState()); // A14
+        extendedALED3 = new ExtendedAddressableStrip(num3, 67, pinState()); // A13
     } else if (arduinoType == "Nano") {
-        // Für Arduino Nano, verwende Pin D12
-        extendedALED1 = new ExtendedAddressableStrip(num1, 12, _pinState); // D12
-        dataPort1 = new DataPort(12); // D12
+        // For Arduino Nano, use digital pins 10, 11, and 0
+        extendedALED1 = new ExtendedAddressableStrip(num1, 10, pinState());
+        extendedALED2 = new ExtendedAddressableStrip(num2, 11, pinState());
+        extendedALED3 = new ExtendedAddressableStrip(num3, 0, pinState());
     } else {
         Serial.print("Unsupported Arduino board: ");
         Serial.println(arduinoType);
     }
 }
 
-// Return the extended addressable strip
+// Return the extended addressable strips
 ExtendedAddressableStrip* pinduinoext::adrLED1() {
     return extendedALED1;
 }
 
-// Return pin state
-pinduinoPins* pinduinoext::pinState() {
-    return _pinState;
+ExtendedAddressableStrip* pinduinoext::adrLED2() {
+    return extendedALED2;
 }
 
-// Return DataPort
-DataPort* pinduinoext::port1() {
-    return dataPort1;
+ExtendedAddressableStrip* pinduinoext::adrLED3() {
+    return extendedALED3;
 }
