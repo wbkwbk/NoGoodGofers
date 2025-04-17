@@ -5,6 +5,7 @@
 // Implements single press, double-click, and long press detection
 // Updated: SET_BRIGHTNESS sets LED strip to red
 // Fixed: Blue Button single press toggles ALL_LED <-> ALL_LED_RUN_ONLY correctly
+// Anpassung: Nur adrLED1 an D12, strip()->begin() hinzugefügt, adrLED2/adrLED3 entfernt
 
 #include "pinduinoext.h"
 
@@ -33,7 +34,7 @@ pinduinoext nggPinduno(aLEDNum1, aLEDNum2, aLEDNum3, "Nano");
 
 // Button Configuration
 const int RED_BUTTON_PIN = 10;   // D10 - Yellow Wire
-const int BLUE_BUTTON_PIN = 11;  // D11 - White Whire
+const int BLUE_BUTTON_PIN = 11;  // D11 - White Wire
 const unsigned long DEBOUNCE_DELAY = 50;
 const unsigned long LONG_PRESS_DURATION = 1000;  // 1s
 const unsigned long DOUBLE_CLICK_WINDOW = 1000;  // 1s
@@ -112,12 +113,11 @@ void setup() {
   delay(500);
 
   // Initialize LEDs
+  nggPinduno.adrLED1()->strip()->begin(); // NeoPixel-Initialisierung
   nggPinduno.adrLED1()->clear();
-  nggPinduno.adrLED2()->clear();
-  nggPinduno.adrLED3()->clear();
-  nggPinduno.pinState()->reset();
   nggPinduno.adrLED1()->setBrightness(brightness);
   nggPinduno.adrLED1()->show(true);
+  nggPinduno.pinState()->reset();
 
   selectNextAttractColor();  // Prepare for ALL_LED
   debug_println("Initialization Complete");
@@ -250,10 +250,9 @@ void handleNoLedState() {
 }
 
 void handleAllLedState() {
-  // Update pin states
   nggPinduno.pinState()->update();
-
-  // Execute original state machine
+  debug_print("ALL_LED: Current state = ");
+  debug_println_var(currentState); // Debug Zustandsfluss
   switch (currentState) {
     case ATTRACT:
       handleAttractState();
@@ -265,8 +264,6 @@ void handleAllLedState() {
       handleEffectActiveState();
       break;
   }
-
-  // Check for pin triggers
   checkPinStates();
 }
 
@@ -289,6 +286,8 @@ void handleSetBrightnessState() {
     stateChanged = false;
     debug_println("SET_BRIGHTNESS: Started with red color");
   }
+
+  nggPinduno.pinState()->update(); // Pin-Updates hinzufügen
 
   if (millis() - lastBrightnessUpdate >= BRIGHTNESS_UPDATE_INTERVAL) {
     brightness++;
@@ -444,14 +443,14 @@ void checkPinStates() {
           rainbow_count++;
           debug_print("Rainbow start: ");
           debug_println_var(millis());
-          nggPinduno.adrLED1()->rainbow(8);
+          nggPinduno.adrLED1()->rainbow(8); // ~16s via ExtendedAddressableStrip
           debug_print("Rainbow end: ");
           debug_println_var(millis());
           debug_print("Rainbow count: ");
           debug_println_var(rainbow_count);
           break;
         case 1:
-          nggPinduno.adrLED1()->rainbowCycle(8);
+          nggPinduno.adrLED1()->rainbowCycle(8); // ~16s via ExtendedAddressableStrip
           break;
         case 2:
           nggPinduno.adrLED1()->spreadInFromPoint2Color(1, color1, color1, 1000);
@@ -612,4 +611,3 @@ bool isAnyPinActive() {
   }
   return false;
 }
-

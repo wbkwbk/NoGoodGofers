@@ -26,7 +26,7 @@ void ExtendedAddressableStrip::rainbow(int wait) {
     int i, j;
     // 100 Iterationen für ~2 Sekunden bei wait=1
     for (j = 0; j < 100; j++) {
-        updatePinState(); // Verwende geschützte Methode statt _pinState
+        updatePinState(); // Verwende geschützte Methode aus AddressableStrip
         for (i = 0; i < strip()->numPixels(); i++) {
             updatePinState();
             strip()->setPixelColor(strip()->numPixels() - i, Wheel((i + j * 256 / 100) & 255));
@@ -40,7 +40,7 @@ void ExtendedAddressableStrip::rainbowCycle(int wait) {
     int i, j;
     // 100 Iterationen für ~2 Sekunden bei wait=1
     for (j = 0; j < 100; j++) {
-        updatePinState(); // Verwende geschützte Methode statt _pinState
+        updatePinState(); // Verwende geschützte Methode aus AddressableStrip
         for (i = 0; i < strip()->numPixels(); i++) {
             updatePinState();
             strip()->setPixelColor(strip()->numPixels() - i, 
