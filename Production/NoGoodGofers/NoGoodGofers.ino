@@ -225,6 +225,7 @@ void updateButtonStates() {
       previousMetaState = metaState;
       metaState = SET_BRIGHTNESS;
       debug_println("Blue Button Long Press: Entering SET_BRIGHTNESS");
+      stateChanged = true;
     }
   } else if (!blueButton.isPressed && blueButton.currentState == HIGH && millis() - blueButton.pressStartTime < LONG_PRESS_DURATION && blueButton.pressStartTime > 0) {
     // Single press detection (on release, not a long press)
