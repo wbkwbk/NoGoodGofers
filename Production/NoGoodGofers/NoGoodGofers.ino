@@ -244,9 +244,9 @@ void updateButtonStates() {
 }
 
 void handleNoLedState() {
+  nggPinduno.adrLED1()->clear();
+   nggPinduno.adrLED1()->show(true);
   if (stateChanged) {
-    nggPinduno.adrLED1()->clear();
-    nggPinduno.adrLED1()->show(true);
     debug_println("NO_LED: LEDs off");
     stateChanged = false;
   }
@@ -254,8 +254,8 @@ void handleNoLedState() {
 
 void handleAllLedState() {
   nggPinduno.pinState()->update();
-  debug_print("ALL_LED: Current state = ");
-  debug_println_var(currentState); // Debug Zustandsfluss
+  //debug_print("ALL_LED: Current state = ");
+  //debug_println_var(currentState); // Debug Zustandsfluss
   switch (currentState) {
     case ATTRACT:
       handleAttractState();
