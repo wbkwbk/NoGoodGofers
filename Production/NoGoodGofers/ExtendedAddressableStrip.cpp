@@ -32,7 +32,7 @@ void ExtendedAddressableStrip::rainbow(int wait) {
             strip()->setPixelColor(strip()->numPixels() - i, Wheel((i + j * 256 / 100) & 255));
         }
         strip()->show();
-        delay(wait * 20); // 20 ms pro Iteration bei wait=1 -> 100 * 20 ms = 2 Sekunden
+        delay(wait * 0); // 20 ms pro Iteration bei wait=1 -> 100 * 20 ms = 2 Sekunden
     }
 }
 
@@ -47,6 +47,6 @@ void ExtendedAddressableStrip::rainbowCycle(int wait) {
                 Wheel(((i * 256 / strip()->numPixels()) + j * 2 * 256 / 100) & 255));
         }
         strip()->show();
-        delay(wait * 20); // 20 ms pro Iteration bei wait=1 -> 100 * 20 ms = 2 Sekunden
+        delay(wait * 0); // 20 ms pro Iteration bei wait=1 -> 100 * 20 ms = 2 Sekunden
     }
 }
