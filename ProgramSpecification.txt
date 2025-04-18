@@ -68,17 +68,22 @@ The following Events must be handled properly
 			Every time the counter is increased the brightness of the LED stripe is set to the according brightness value
 			This continues until the button is released again. The current value is then saved.
 			When the  button is released the games goes back to it's previous state
+			When brightness value of 200 is reached blink one time in color green: 1 second on 200ms off, block other code execution during blink, then continue with SET_BRIGHTNESS
+			When brightness value of 230 is reached blink 2 times in color green: 1 second on, 200ms offblock other code execution during this period, then continue with SET_BRIGHTNESS
+			When brightness value of 255 is reached blink 3 times in green, 1 second on, 200ms off, then turn on leds for 3 seconds in green block other code execution during this period,, then continue with SET_BRIGHTNESS  
+			
 	4. Red Button double click - two clicks within one second:
 		The game immediately goes to ALL_LED state, the brightness is set to 255.
 		
-	5. NO_LED meta-state when the blue button (D7) is pressed:
-		Single Click: Cycle through a predefined list of colors ({"white", "red", "green", "blue", "yellow", "cyan", "purple", "orange", "lime", "sky", "mint", "magenta", "lavender"}), starting with the first entry (white). At the end of the list, restart with white.
+	5. When system is in meta-state NO_LED and the blue button (D7) is pressed: The system changes to New meta_state SET_STATICCOLOR
+		Red Button Single Click: Cycle through a predefined list of colors ({"white", "red", "green", "blue", "yellow", "cyan", "purple", "orange", "lime", "sky", "mint", "magenta", "lavender"}), starting with the first entry (white). At the end of the list, restart with white.
+			Selected Color Usage: The chosen color becomes the static color for:
+				-	The ALL_LED_RUN_ONLY meta-state (applied in the GAME_RUN state).
+				-	The ALL_LED meta-state when in the GAME_RUN state (but not in ATTRACT or EFFECT_ACTIVE, which retain their existing behavior).
 
-		Selected Color Usage: The chosen color becomes the static color for:
-		The ALL_LED_RUN_ONLY meta-state (applied in the GAME_RUN state).
-
-		The ALL_LED meta-state when in the GAME_RUN state (but not in ATTRACT or EFFECT_ACTIVE, which retain their existing behavior).
-
-		Double Click: Reset the color selection to the beginning of the list (white).
+		Blue button double click:  Exits the meta-state SET_STATICCOLOR and returns to the previous meta-state before the transition to SET_STATICCOLOR
+		Blue button click in state SET_STATICCOLOR: resets the color list index and sets it the the first color
+		
+		
 
 
