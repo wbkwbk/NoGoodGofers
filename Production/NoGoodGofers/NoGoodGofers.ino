@@ -546,14 +546,14 @@ void checkPinStates() {
           rainbow_count++;
           debug_print("Rainbow start: ");
           debug_println_var(millis());
-          nggPinduno.adrLED1()->rainbow(8); // ~16s via ExtendedAddressableStrip
+          nggPinduno.adrLED1()->rainbowWS2812FX(1); // ~16s via ExtendedAddressableStrip
           debug_print("Rainbow end: ");
           debug_println_var(millis());
           debug_print("Rainbow count: ");
           debug_println_var(rainbow_count);
           break;
         case 1:
-          nggPinduno.adrLED1()->rainbowCycle(8); // ~16s via ExtendedAddressableStrip
+          nggPinduno.adrLED1()->rainbowCycleWS2812FX(1); // ~16s via ExtendedAddressableStrip
           break;
         case 2:
           nggPinduno.adrLED1()->spreadInFromPoint2Color(1, color1, color1, 1000);
