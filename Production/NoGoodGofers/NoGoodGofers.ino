@@ -1,16 +1,7 @@
-// No Good Gophers - Enhanced with Button Control
-// Integrates Red (A6) and Blue (A7) buttons for meta-state management
-// Uses original Pinduino pin D10 for LED strip (adrLED1)
-// New meta-states (NO_LED, ALL_LED, ALL_LED_RUN_ONLY, SET_BRIGHTNESS) layer above existing states
-// Preserves original ATTRACT, GAME_RUN, EFFECT_ACTIVE state machine
-// Implements single press, double-click, and long press detection
-// Updated: SET_BRIGHTNESS sets LED strip to red
-// Fixed: Blue Button single press toggles ALL_LED <-> ALL_LED_RUN_ONLY correctly
-
 #include "pinduinoext.h"
 
 // Debug Configuration
-#define DEBUG 1
+#define DEBUG 0
 #if DEBUG == 1
   #define debug_print(x) Serial.print(F(x))
   #define debug_print_dec(x) Serial.print(x, DEC)
@@ -33,14 +24,14 @@ const String EFFECTFINISHED = "";
 pinduinoext nggPinduno(aLEDNum1, aLEDNum2, aLEDNum3, "Nano");
 
 // Button Configuration
-const int RED_BUTTON_PIN = 6;   // D6 - Yellow Wire, Red Button
-const int BLUE_BUTTON_PIN = 7;  // D7 - White Wire, Blue Button
+const int RED_BUTTON_PIN = 6;   // D6 - Red Button
+const int BLUE_BUTTON_PIN = 7;  // D7 - Blue Button
 const unsigned long DEBOUNCE_DELAY = 50;
 const unsigned long LONG_PRESS_DURATION = 1000;  // 1s
 const unsigned long DOUBLE_CLICK_WINDOW = 1000;  // 1s
 const unsigned long BRIGHTNESS_UPDATE_INTERVAL = 50;  // 50ms
 
-// Meta-State Machine (New Layer)
+// Meta-State Machine
 enum MetaGameState { NO_LED, ALL_LED, ALL_LED_RUN_ONLY, SET_BRIGHTNESS };
 MetaGameState metaState = NO_LED;
 MetaGameState previousMetaState = NO_LED;
@@ -87,6 +78,11 @@ const String attractColors[] = {"green", "blue", "red"};
 bool colorsShown[3] = {false, false, false};
 uint8_t brightness = 255;  // Default brightness
 
+// Color Selection for NO_LED Blue Button
+const int NUM_STATIC_COLORS = 13;
+const String staticColors[] = {"white", "red", "green", "blue", "yellow", "cyan", "purple", "orange", "lime", "sky", "mint", "magenta", "lavender"};
+int staticColorIndex = 0;  // Start with "white"
+
 // Effect and Color Tracking
 const int NUM_COLORS = 13;
 const String availableColors[] = {"red", "green", "blue", "yellow", "cyan", "purple", "white", "orange", "lime", "sky", "mint", "magenta", "lavender"};
@@ -105,32 +101,26 @@ void setup() {
   debug_println("System Initializing...");
   debug_println("LED Control v3.1 - With Button Enhancements");
 
-
-
   // Power stabilization
   delay(500);
 
   // Initialize LEDs
-  nggPinduno.adrLED1()->strip()->begin(); // NeoPixel-Initialisierung
+  nggPinduno.adrLED1()->strip()->begin();
   nggPinduno.adrLED1()->clear();
   nggPinduno.adrLED1()->setBrightness(brightness);
   nggPinduno.adrLED1()->show(true);
   nggPinduno.pinState()->reset();
 
-  selectNextAttractColor();  // Prepare for ALL_LED
+  selectNextAttractColor();
   debug_println("Initialization Complete");
 
   // Initialize Buttons
   pinMode(RED_BUTTON_PIN, INPUT_PULLUP);
   pinMode(BLUE_BUTTON_PIN, INPUT_PULLUP);
-
 }
 
 void loop() {
-  // 1. Update button states
   updateButtonStates();
-
-  // 2. Handle meta-state
   switch (metaState) {
     case NO_LED:
       handleNoLedState();
@@ -148,7 +138,6 @@ void loop() {
 }
 
 void updateButtonStates() {
-  // Read buttons with debouncing
   bool redReading = digitalRead(RED_BUTTON_PIN);
   bool blueReading = digitalRead(BLUE_BUTTON_PIN);
 
@@ -159,14 +148,14 @@ void updateButtonStates() {
   if (millis() - redButton.lastDebounceTime > DEBOUNCE_DELAY) {
     if (redReading != redButton.currentState) {
       redButton.currentState = redReading;
-      if (redReading == LOW) {  // Pressed
+      if (redReading == LOW) {
         redButton.isPressed = true;
         redButton.pressStartTime = millis();
         redButton.clickCount++;
         if (redButton.clickCount == 1) {
           redButton.lastClickTime = millis();
         }
-      } else {  // Released
+      } else {
         redButton.isPressed = false;
       }
     }
@@ -180,17 +169,31 @@ void updateButtonStates() {
   if (millis() - blueButton.lastDebounceTime > DEBOUNCE_DELAY) {
     if (blueReading != blueButton.currentState) {
       blueButton.currentState = blueReading;
-      if (blueReading == LOW) {  // Pressed
+      if (blueReading == LOW) {
         blueButton.isPressed = true;
         blueButton.pressStartTime = millis();
         blueButton.isLongPressed = false;
-      } else {  // Released
+        blueButton.clickCount++;
+        if (blueButton.clickCount == 1) {
+          blueButton.lastClickTime = millis();
+        }
+      } else {
         blueButton.isPressed = false;
         if (blueButton.isLongPressed && metaState == SET_BRIGHTNESS) {
-          // Save brightness and return to previous state
           metaState = previousMetaState;
+          if (metaState == NO_LED) {
+            nggPinduno.adrLED1()->clear();
+            nggPinduno.adrLED1()->setBrightness(255);
+            nggPinduno.adrLED1()->show(true);
+            stateChanged = true;
+            debug_println("SET_BRIGHTNESS -> NO_LED: LEDs cleared");
+          } else {
+            nggPinduno.adrLED1()->setBrightness(brightness);
+            stateChanged = true;
+          }
           debug_print("Brightness set to: ");
-          debug_print_dec(brightness); debug_println("");
+          debug_print_dec(brightness);
+          debug_println("");
         }
       }
     }
@@ -200,50 +203,76 @@ void updateButtonStates() {
   // Detect Red Button Double-Click
   if (redButton.clickCount > 0 && millis() - redButton.lastClickTime > DOUBLE_CLICK_WINDOW) {
     if (redButton.clickCount >= 2) {
-      // Double-click: Set ALL_LED, brightness 255
       metaState = ALL_LED;
       brightness = 255;
       nggPinduno.adrLED1()->setBrightness(brightness);
       debug_println("Red Button Double-Click: ALL_LED, Brightness 255");
     } else if (redButton.clickCount == 1 && !redButton.isPressed) {
-      // Single press: Toggle NO_LED/ALL_LED
       if (metaState == NO_LED) {
         metaState = ALL_LED;
         debug_println("Red Button Press: NO_LED -> ALL_LED");
       } else if (metaState == ALL_LED) {
         metaState = NO_LED;
-        debug_println("Red Button Press: ALL_LED -> NO_LED");
+        nggPinduno.adrLED1()->clear();
+        nggPinduno.adrLED1()->setBrightness(255);
+        nggPinduno.adrLED1()->show(true);
+        currentEffectColor = EFFECTFINISHED;
+        debug_println("Red Button Press: ALL_LED -> NO_LED, LEDs cleared");
       }
     }
     redButton.clickCount = 0;
   }
 
-  // Detect Blue Button Long Press and Single Press
+  // Detect Blue Button Actions
+  if (blueButton.clickCount > 0 && millis() - blueButton.lastClickTime > DOUBLE_CLICK_WINDOW) {
+    if (blueButton.clickCount >= 2 && !blueButton.isPressed) {
+      // Double-click: Reset color to "white" in NO_LED
+      if (metaState == NO_LED) {
+        staticColorIndex = 0;
+        nggPinduno.adrLED1()->color(staticColors[staticColorIndex]);
+        nggPinduno.adrLED1()->setBrightness(brightness);
+        nggPinduno.adrLED1()->show(true);
+        debug_print("Blue Button Double-Click: Color reset to ");
+        debug_println_var(staticColors[staticColorIndex]);
+      }
+      blueButton.clickCount = 0;
+    } else if (blueButton.clickCount == 1 && !blueButton.isPressed && !blueButton.isLongPressed) {
+      // Single press
+      if (metaState == NO_LED) {
+        // Cycle color in NO_LED
+        staticColorIndex = (staticColorIndex + 1) % NUM_STATIC_COLORS;
+        nggPinduno.adrLED1()->color(staticColors[staticColorIndex]);
+        nggPinduno.adrLED1()->setBrightness(brightness);
+        nggPinduno.adrLED1()->show(true);
+        debug_print("Blue Button Press: Color set to ");
+        debug_println_var(staticColors[staticColorIndex]);
+      } else if (metaState == ALL_LED) {
+        metaState = ALL_LED_RUN_ONLY;
+        currentState = GAME_RUN;
+        stateChanged = true;
+        debug_println("Blue Button Press: ALL_LED -> ALL_LED_RUN_ONLY");
+      } else if (metaState == ALL_LED_RUN_ONLY) {
+        metaState = ALL_LED;
+        currentState = ATTRACT;
+        stateChanged = true;
+        debug_println("Blue Button Press: ALL_LED_RUN_ONLY -> ALL_LED");
+      }
+      blueButton.clickCount = 0;
+    }
+  }
+
+  // Detect Blue Button Long Press
   if (blueButton.isPressed && !blueButton.isLongPressed && millis() - blueButton.pressStartTime >= LONG_PRESS_DURATION) {
     blueButton.isLongPressed = true;
     if (metaState != NO_LED) {
       previousMetaState = metaState;
       metaState = SET_BRIGHTNESS;
+      stateChanged = true;
       debug_println("Blue Button Long Press: Entering SET_BRIGHTNESS");
-      stateChanged = true;
     }
-  } else if (!blueButton.isPressed && blueButton.currentState == HIGH && millis() - blueButton.pressStartTime < LONG_PRESS_DURATION && blueButton.pressStartTime > 0) {
-    // Single press detection (on release, not a long press)
-    if (metaState == ALL_LED) {
-      metaState = ALL_LED_RUN_ONLY;
-      currentState = GAME_RUN;
-      stateChanged = true;
-      debug_println("Blue Button Press: ALL_LED -> ALL_LED_RUN_ONLY");
-    } else if (metaState == ALL_LED_RUN_ONLY) {
-      metaState = ALL_LED;
-      currentState = ATTRACT;  // Return to default
-      stateChanged = true;
-      debug_println("Blue Button Press: ALL_LED_RUN_ONLY -> ALL_LED");
-    }
-    blueButton.pressStartTime = 0;  // Reset to prevent multiple triggers
+    blueButton.clickCount = 0;  // Reset clicks on long press
   }
 }
-
 void handleNoLedState() {
   nggPinduno.adrLED1()->clear();
    nggPinduno.adrLED1()->show(true);
@@ -254,9 +283,11 @@ void handleNoLedState() {
 }
 
 void handleAllLedState() {
+  if (stateChanged) {
+    currentEffectColor = EFFECTFINISHED;
+    debug_println("ALL_LED: Reset effects on state change");
+  }
   nggPinduno.pinState()->update();
-  //debug_print("ALL_LED: Current state = ");
-  //debug_println_var(currentState); // Debug Zustandsfluss
   switch (currentState) {
     case ATTRACT:
       handleAttractState();
@@ -274,25 +305,24 @@ void handleAllLedState() {
 void handleAllLedRunOnlyState() {
   if (stateChanged) {
     currentState = GAME_RUN;
+    currentEffectColor = EFFECTFINISHED;
     stateChanged = true;
-    debug_println("ALL_LED_RUN_ONLY: Forcing GAME_RUN");
+    debug_println("ALL_LED_RUN_ONLY: Forcing GAME_RUN, effects reset");
   }
   handleGameRunState();
 }
 
 void handleSetBrightnessState() {
-    nggPinduno.adrLED1()->color("red");  // Set LED strip to red
-    nggPinduno.adrLED1()->setBrightness(brightness);
-    nggPinduno.adrLED1()->show(true);
+  nggPinduno.adrLED1()->color("red");
+  nggPinduno.adrLED1()->setBrightness(brightness);
+  nggPinduno.adrLED1()->show(true);
   if (stateChanged) {
-    brightness = 1;  // Start at 1
+    brightness = 1;
     lastBrightnessUpdate = millis();
     stateChanged = false;
     debug_println("SET_BRIGHTNESS: Started with red color");
   }
-
-  nggPinduno.pinState()->update(); // Pin-Updates hinzufügen
-
+  nggPinduno.pinState()->update();
   if (millis() - lastBrightnessUpdate >= BRIGHTNESS_UPDATE_INTERVAL) {
     brightness++;
     if (brightness > 255) brightness = 1;
@@ -300,21 +330,19 @@ void handleSetBrightnessState() {
     nggPinduno.adrLED1()->show(true);
     lastBrightnessUpdate = millis();
     debug_print("Brightness: ");
-    debug_print_dec(brightness); debug_println("");
+    debug_print_dec(brightness);
+    debug_println("");
   }
 }
 
-// Original State Handlers (Modified)
 void handleAttractState() {
   if (stateChanged) {
     stateChanged = false;
     debug_println("Entering ATTRACT mode");
   }
-
   nggPinduno.adrLED1()->sparkle(currentAttractColor, 20);
   nggPinduno.adrLED1()->setBrightness(brightness);
   nggPinduno.adrLED1()->show(true);
-
   if (millis() - lastColorChangeTime >= attractColorDuration) {
     selectNextAttractColor();
     lastColorChangeTime = millis();
@@ -323,19 +351,16 @@ void handleAttractState() {
 
 void handleGameRunState() {
   if (millis() - lastGameRunColorUpdate >= minRefreshInterval) {
-    uint8_t r = constrain(128, 0, 255);
-    uint8_t g = constrain(128, 0, 255);
-    uint8_t b = constrain(128, 0, 255);
-
-    nggPinduno.adrLED1()->colorRGB(r, g, b);
+    // Use selected static color instead of RGB(128,128,128)
+    nggPinduno.adrLED1()->color(staticColors[staticColorIndex]);
     nggPinduno.adrLED1()->setBrightness(brightness);
     nggPinduno.adrLED1()->show(true);
     lastGameRunColorUpdate = millis();
   }
-
   if (stateChanged) {
     stateChanged = false;
-    debug_println("GAME_RUN initialized with forced color update");
+    debug_print("GAME_RUN: Using static color ");
+    debug_println_var(staticColors[staticColorIndex]);
   }
 }
 
@@ -344,10 +369,8 @@ void handleEffectActiveState() {
     stateChanged = false;
     debug_println("Entering EFFECT_ACTIVE mode");
   }
-
   nggPinduno.adrLED1()->setBrightness(brightness);
   nggPinduno.adrLED1()->show(true);
-
   if (isNOEffectrunning() || (millis() - effectStartTime >= effectDuration)) {
     currentState = GAME_RUN;
     stateChanged = true;
@@ -355,6 +378,10 @@ void handleEffectActiveState() {
     debug_println("Effect completed - Returning to GAME_RUN");
   }
 }
+
+// ... (rest of your existing functions unchanged: isNOEffectrunning, checkPinStates, triggerEffect, getRandomColor, getRandomEffect, selectNextAttractColor, isAnyPinActive)
+
+
 
 boolean isNOEffectrunning() {
   return currentEffectColor == EFFECTFINISHED;

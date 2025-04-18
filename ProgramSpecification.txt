@@ -70,4 +70,15 @@ The following Events must be handled properly
 			When the  button is released the games goes back to it's previous state
 	4. Red Button double click - two clicks within one second:
 		The game immediately goes to ALL_LED state, the brightness is set to 255.
+		
+	5. NO_LED meta-state when the blue button (D7) is pressed:
+		Single Click: Cycle through a predefined list of colors ({"white", "red", "green", "blue", "yellow", "cyan", "purple", "orange", "lime", "sky", "mint", "magenta", "lavender"}), starting with the first entry (white). At the end of the list, restart with white.
+
+		Selected Color Usage: The chosen color becomes the static color for:
+		The ALL_LED_RUN_ONLY meta-state (applied in the GAME_RUN state).
+
+		The ALL_LED meta-state when in the GAME_RUN state (but not in ATTRACT or EFFECT_ACTIVE, which retain their existing behavior).
+
+		Double Click: Reset the color selection to the beginning of the list (white).
+
 
