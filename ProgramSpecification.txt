@@ -47,19 +47,34 @@ Please enhance the following program by this specification:
 The current states remain as they are the new states have to be incorperated correctly to the existing states. They are like a layer above the existing states.
 There are two simple press buttons to be observed. Their status is: Pressed/Not Pressed. Those are the hardware buttons: ttps://www.bastelgarage.ch/m5stack-mini-dual-button-unit?search=m5stack%20mini%20dual%20button%20unit
 Button connection to Arduino Nano	
-	Red Button connected to D10
-	Blue Button connected to D11
+	Red Button connected to D6
+	Blue Button connected to D7
+	We have the following meta states:
+	NO_LED	//all LEDS are off
+	ALL_LED	//Full LED Features available according the following indented substates
+		With substates
+			ATTRACT //When the game is not running
+			GAME_RUN //Game is runnuing but no effect is active - LED color is set to the one chosen by SET_STATICCOLOR or if not set to the default  first one in the list: "white"
+			EFFECT_ACTIVE //effect is trigered by J126(x)		
+	ALL_LED_RUN_ONLY - only static playfield lightning
+		With substate
+			GAME_RUN - only static playfield lightning
+	SET_BRIGHTNESS	- set the global Brightness for all Modes where LEDs are on
+	SET_STATICCOLOR	- set the color for ALL_LED_RUN_ONLY, GAME_RUN
+	
+	
+	
 Per default, when the program starts, the Game State is NO_LED which means game is not in  ATTRACT, GAME_RUN, EFFECT_ACTIVE state. 
 	NO_LED means the led stripe is off - dark
 The following Events must be handled properly
-	1. Red Button Pressed toggles Game States between NO_LED/ALL_LED
-		ALL_LED means the game can enter all states ATTRACT, GAME_RUN, EFFECT_ACTIVE 
+	1. Red Button Pressed toggles Game States between meta state NO_LED/ALL_LED
+		ALL_LED means the game can enter all states ATTRACT, GAME_RUN, EFFECT_ACTIVE
 		NO_LED means game cannot enter any of those states ATTRACT, GAME_RUN, EFFECT_ACTIVE,  the led stripe is off - dark
 	2. Blue Button pressed
 		If the blue button is pressed and the game is in state ALL_LED this button toggles between
-			ALL_LED_ALL_STATES -> game can enter all states ATTRACT, GAME_RUN, EFFECT_ACTIVE 
-			ALL_LED_RUN_ONLY -> game will immediatley enter GAME_RUN state where the LED will be light with a constant RGB 128,128,128
-		IF the game  is in state NO_LED button press has no effect
+			- ALL_LED -> game can enter all states ATTRACT, GAME_RUN, EFFECT_ACTIVE 
+			- ALL_LED_RUN_ONLY -> game will immediatley enter GAME_RUN state where the LED will be light with the color selected in state SET_STATICCOLOR
+		IF the game  is in state NO_LED please see 5. SET_STATICCOLOR
 	3. Blue button long pressed, longer then one second game enters in state	
 		SET_BRIGHTNESS
 			when entering SET_BRIGHTNESS state the led strip color is set to red
@@ -72,17 +87,17 @@ The following Events must be handled properly
 			When brightness value of 230 is reached blink 2 times in color green: 1 second on, 200ms offblock other code execution during this period, then continue with SET_BRIGHTNESS
 			When brightness value of 255 is reached blink 3 times in green, 1 second on, 200ms off, then turn on leds for 3 seconds in green block other code execution during this period,, then continue with SET_BRIGHTNESS  
 			
-	4. Red Button double click - two clicks within one second:
-		The game immediately goes to ALL_LED state, the brightness is set to 255.
+	4. Red Button double click - two clicks within one second when NOT in state SET_STATICCOLOR:
+		The game immediately goes to ALL_LED state, the brightness is set to 255 and the color the one selected in SET_STATICCOLOR
 		
-	5. When system is in meta-state NO_LED and the blue button (D7) is pressed: The system changes to New meta_state SET_STATICCOLOR
+	5. SET_STATICCOLOR: When system is in meta-state NO_LED and the blue button (D7) is pressed: The system changes to New meta_state SET_STATICCOLOR
 		Red Button Single Click: Cycle through a predefined list of colors ({"white", "red", "green", "blue", "yellow", "cyan", "purple", "orange", "lime", "sky", "mint", "magenta", "lavender"}), starting with the first entry (white). At the end of the list, restart with white.
 			Selected Color Usage: The chosen color becomes the static color for:
 				-	The ALL_LED_RUN_ONLY meta-state (applied in the GAME_RUN state).
 				-	The ALL_LED meta-state when in the GAME_RUN state (but not in ATTRACT or EFFECT_ACTIVE, which retain their existing behavior).
 
-		Blue button double click:  Exits the meta-state SET_STATICCOLOR and returns to the previous meta-state before the transition to SET_STATICCOLOR
-		Blue button click in state SET_STATICCOLOR: resets the color list index and sets it the the first color
+		Blue button click in the state SET_STATICCOLOR:  Exits the meta-state SET_STATICCOLOR and returns to the previous meta-state before the transition to SET_STATICCOLOR
+		Red button double click in state SET_STATICCOLOR: resets the color list index and sets it the the first color
 		
 		
 
