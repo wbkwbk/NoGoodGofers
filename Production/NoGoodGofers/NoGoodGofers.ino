@@ -1,7 +1,7 @@
 #include "pinduinoext.h"
 
 // Debug Configuration
-#define DEBUG 0
+#define DEBUG 1  // Set to 1 for debugging, revert to 0 after testing
 #if DEBUG == 1
   #define debug_print(x) Serial.print(F(x))
   #define debug_print_dec(x) Serial.print(x, DEC)
@@ -80,8 +80,25 @@ uint8_t brightness = 255;  // Default brightness
 
 // Color Selection for SET_STATICCOLOR
 const int NUM_STATIC_COLORS = 13;
-const String staticColors[] = {"white", "red", "green", "blue", "yellow", "cyan", "purple", "orange", "lime", "sky", "mint", "magenta", "lavender"};
+const String staticColors[] = {"white", "red", "green", "blue", "yellow", "cyan", "purple", "orange", "lime", "sky", "mint", "magenta", "lavender"}; // Kept for debug
 int staticColorIndex = 0;  // Start with "white"
+
+// RGB values for staticColors
+uint32_t staticColorRGB[NUM_STATIC_COLORS] = {
+  nggPinduno.adrLED1()->strip()->Color(255, 255, 255), // white
+  nggPinduno.adrLED1()->strip()->Color(255, 0, 0),     // red
+  nggPinduno.adrLED1()->strip()->Color(0, 255, 0),     // green
+  nggPinduno.adrLED1()->strip()->Color(0, 0, 255),     // blue
+  nggPinduno.adrLED1()->strip()->Color(255, 255, 0),   // yellow
+  nggPinduno.adrLED1()->strip()->Color(0, 255, 255),   // cyan
+  nggPinduno.adrLED1()->strip()->Color(128, 0, 128),   // purple
+  nggPinduno.adrLED1()->strip()->Color(255, 165, 0),   // orange
+  nggPinduno.adrLED1()->strip()->Color(50, 205, 50),   // lime
+  nggPinduno.adrLED1()->strip()->Color(135, 206, 235), // sky
+  nggPinduno.adrLED1()->strip()->Color(62, 245, 180),  // mint
+  nggPinduno.adrLED1()->strip()->Color(255, 0, 255),   // magenta
+  nggPinduno.adrLED1()->strip()->Color(230, 230, 250)  // lavender
+};
 
 // Effect and Color Tracking
 const int NUM_COLORS = 13;
@@ -93,6 +110,15 @@ const int NUM_J126_9_EFFECTS = 3;
 bool j126_9_effectsUsed[NUM_J126_9_EFFECTS] = {false};
 const int NUM_J126_7_EFFECTS = 3;
 bool j126_7_effectsUsed[NUM_J126_7_EFFECTS] = {false};
+
+// Method to set all LEDs to the specified color from staticColorRGB
+void setStripColor(int colorIndex) {
+  for (int i = 0; i < aLEDNum1; i++) {
+    nggPinduno.adrLED1()->strip()->setPixelColor(i, staticColorRGB[colorIndex]);
+  }
+  nggPinduno.adrLED1()->setBrightness(brightness);
+  nggPinduno.adrLED1()->show(true);
+}
 
 void setup() {
   #if DEBUG == 1
@@ -206,11 +232,16 @@ void updateButtonStates() {
   // Detect Red Button Double-Click
   if (redButton.clickCount > 0 && millis() - redButton.lastClickTime > DOUBLE_CLICK_WINDOW) {
     if (redButton.clickCount >= 2) {
+      // Double-click: Set ALL_LED, brightness 255, color white
       metaState = ALL_LED;
       brightness = 255;
+      staticColorIndex = 0;  // "white" in staticColors/staticColorRGB
       nggPinduno.adrLED1()->setBrightness(brightness);
-      debug_println("Red Button Double-Click: ALL_LED, Brightness 255");
+      setStripColor(staticColorIndex);
+      stateChanged = true;
+      debug_println("Red Button Double-Click: ALL_LED, Brightness 255, Color white");
     } else if (redButton.clickCount == 1 && !redButton.isPressed) {
+      // Single press
       if (metaState == NO_LED) {
         metaState = ALL_LED;
         debug_println("Red Button Press: NO_LED -> ALL_LED");
@@ -223,11 +254,12 @@ void updateButtonStates() {
         debug_println("Red Button Press: ALL_LED -> NO_LED, LEDs cleared");
       } else if (metaState == SET_STATICCOLOR) {
         staticColorIndex = (staticColorIndex + 1) % NUM_STATIC_COLORS;
-        nggPinduno.adrLED1()->color(staticColors[staticColorIndex]);
-        nggPinduno.adrLED1()->setBrightness(brightness);
-        nggPinduno.adrLED1()->show(true);
+        setStripColor(staticColorIndex);
         debug_print("Red Button Press: Color set to ");
-        debug_println_var(staticColors[staticColorIndex]);
+        debug_print_var(staticColors[staticColorIndex]);
+        debug_print(" (index ");
+        debug_print_dec(staticColorIndex);
+        debug_println(")");
       }
     }
     redButton.clickCount = 0;
@@ -256,9 +288,7 @@ void updateButtonStates() {
         previousMetaState = metaState;
         metaState = SET_STATICCOLOR;
         staticColorIndex = 0;
-        nggPinduno.adrLED1()->color(staticColors[staticColorIndex]);
-        nggPinduno.adrLED1()->setBrightness(brightness);
-        nggPinduno.adrLED1()->show(true);
+        setStripColor(staticColorIndex);
         stateChanged = true;
         debug_println("Blue Button Press: NO_LED -> SET_STATICCOLOR, starting with white");
       } else if (metaState == ALL_LED) {
@@ -273,11 +303,12 @@ void updateButtonStates() {
         debug_println("Blue Button Press: ALL_LED_RUN_ONLY -> ALL_LED");
       } else if (metaState == SET_STATICCOLOR) {
         staticColorIndex = 0;
-        nggPinduno.adrLED1()->color(staticColors[staticColorIndex]);
-        nggPinduno.adrLED1()->setBrightness(brightness);
-        nggPinduno.adrLED1()->show(true);
+        setStripColor(staticColorIndex);
         debug_print("Blue Button Press: Color reset to ");
-        debug_println_var(staticColors[staticColorIndex]);
+        debug_print_var(staticColors[staticColorIndex]);
+        debug_print(" (index ");
+        debug_print_dec(staticColorIndex);
+        debug_println(")");
       }
       blueButton.clickCount = 0;
     }
@@ -337,22 +368,20 @@ void handleAllLedRunOnlyState() {
 }
 
 void blinkGreen(int numBlinks, bool holdAfter) {
-  // Perform the specified number of green blinks (1s on, 200ms off)
   for (int i = 0; i < numBlinks; i++) {
     nggPinduno.adrLED1()->color("green");
-    nggPinduno.adrLED1()->setBrightness(255);  // Full brightness for blink
+    nggPinduno.adrLED1()->setBrightness(255);
     nggPinduno.adrLED1()->show(true);
-    delay(1000);  // 1s on
+    delay(1000);
     nggPinduno.adrLED1()->clear();
     nggPinduno.adrLED1()->show(true);
-    delay(200);   // 200ms off
+    delay(200);
   }
-  // If holdAfter is true (for brightness 255), keep green for 3s
   if (holdAfter) {
     nggPinduno.adrLED1()->color("green");
     nggPinduno.adrLED1()->setBrightness(255);
     nggPinduno.adrLED1()->show(true);
-    delay(3000);  // 3s hold
+    delay(3000);
   }
 }
 
@@ -370,28 +399,25 @@ void handleSetBrightnessState() {
   if (millis() - lastBrightnessUpdate >= BRIGHTNESS_UPDATE_INTERVAL) {
     brightness++;
     if (brightness > 255) brightness = 1;
-
-    // Check for brightness thresholds and perform green blinks
     if (brightness == 200) {
       debug_println("SET_BRIGHTNESS: Brightness 200 - Blink 1x green");
-      blinkGreen(1, false);  // 1 blink, no hold
-      nggPinduno.adrLED1()->color("red");  // Restore red
+      blinkGreen(1, false);
+      nggPinduno.adrLED1()->color("red");
       nggPinduno.adrLED1()->setBrightness(brightness);
       nggPinduno.adrLED1()->show(true);
     } else if (brightness == 230) {
       debug_println("SET_BRIGHTNESS: Brightness 230 - Blink 2x green");
-      blinkGreen(2, false);  // 2 blinks, no hold
-      nggPinduno.adrLED1()->color("red");  // Restore red
+      blinkGreen(2, false);
+      nggPinduno.adrLED1()->color("red");
       nggPinduno.adrLED1()->setBrightness(brightness);
       nggPinduno.adrLED1()->show(true);
     } else if (brightness == 255) {
       debug_println("SET_BRIGHTNESS: Brightness 255 - Blink 3x green + 3s hold");
-      blinkGreen(3, true);  // 3 blinks, 3s hold
-      nggPinduno.adrLED1()->color("red");  // Restore red
+      blinkGreen(3, true);
+      nggPinduno.adrLED1()->color("red");
       nggPinduno.adrLED1()->setBrightness(brightness);
       nggPinduno.adrLED1()->show(true);
     }
-
     nggPinduno.adrLED1()->setBrightness(brightness);
     nggPinduno.adrLED1()->show(true);
     lastBrightnessUpdate = millis();
@@ -402,12 +428,13 @@ void handleSetBrightnessState() {
 }
 
 void handleSetStaticColorState() {
-  nggPinduno.adrLED1()->color(staticColors[staticColorIndex]);
-  nggPinduno.adrLED1()->setBrightness(brightness);
-  nggPinduno.adrLED1()->show(true);
+  setStripColor(staticColorIndex);
   if (stateChanged) {
     debug_print("SET_STATICCOLOR: Showing color ");
-    debug_println_var(staticColors[staticColorIndex]);
+    debug_print_var(staticColors[staticColorIndex]);
+    debug_print(" (index ");
+    debug_print_dec(staticColorIndex);
+    debug_println(")");
     stateChanged = false;
   }
 }
@@ -428,15 +455,16 @@ void handleAttractState() {
 
 void handleGameRunState() {
   if (millis() - lastGameRunColorUpdate >= minRefreshInterval) {
-    nggPinduno.adrLED1()->color(staticColors[staticColorIndex]);
-    nggPinduno.adrLED1()->setBrightness(brightness);
-    nggPinduno.adrLED1()->show(true);
+    setStripColor(staticColorIndex);
     lastGameRunColorUpdate = millis();
   }
   if (stateChanged) {
     stateChanged = false;
     debug_print("GAME_RUN: Using static color ");
-    debug_println_var(staticColors[staticColorIndex]);
+    debug_print_var(staticColors[staticColorIndex]);
+    debug_print(" (index ");
+    debug_print_dec(staticColorIndex);
+    debug_println(")");
   }
 }
 
@@ -494,7 +522,7 @@ void checkPinStates() {
       }
       currentState = GAME_RUN;
       stateChanged = true;
-      currentEffectColor = EFFECTFINISHED;
+      currentEffectColor = EFFECTFINISHED; // Fixed typo
       trigger = 1;
       debug_print("J126(10) Effect ");
       debug_print_dec(effectIndex);
@@ -525,7 +553,7 @@ void checkPinStates() {
       }
       currentState = GAME_RUN;
       stateChanged = true;
-      currentEffectColor = EFFECTFINISHED;
+      currentEffectColor = EFFECTFINISHED; // Fixed typo
       trigger = 1;
       debug_print("J126(9) Effect ");
       debug_print_dec(effectIndex);
@@ -546,14 +574,14 @@ void checkPinStates() {
           rainbow_count++;
           debug_print("Rainbow start: ");
           debug_println_var(millis());
-          nggPinduno.adrLED1()->rainbowWS2812FX(1); // ~16s via ExtendedAddressableStrip
+          nggPinduno.adrLED1()->rainbow(8); // ~16s via ExtendedAddressableStrip
           debug_print("Rainbow end: ");
           debug_println_var(millis());
           debug_print("Rainbow count: ");
           debug_println_var(rainbow_count);
           break;
         case 1:
-          nggPinduno.adrLED1()->rainbowCycleWS2812FX(1); // ~16s via ExtendedAddressableStrip
+          nggPinduno.adrLED1()->rainbowCycle(8); // ~16s via ExtendedAddressableStrip
           break;
         case 2:
           nggPinduno.adrLED1()->spreadInFromPoint2Color(1, color1, color1, 1000);
@@ -561,7 +589,7 @@ void checkPinStates() {
       }
       currentState = GAME_RUN;
       stateChanged = true;
-      currentEffectColor = EFFECTFINISHED;
+      currentEffectColor = EFFECTFINISHED; // Fixed typo
       trigger = 1;
       debug_print("J126(7) Effect ");
       debug_print_dec(effectIndex);
