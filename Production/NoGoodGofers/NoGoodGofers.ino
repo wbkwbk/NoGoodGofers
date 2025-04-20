@@ -1,8 +1,8 @@
 #include "pinduinoext.h"
 
 // Debug Configuration
-#define DEBUG_LEVEL 1  // 0: Off, 1: Full, 2: Only checkPinStates
-#if DEBUG_LEVEL == 2
+#define DEBUG_LEVEL 2  // 0: Off, 1: Full, 2: Only checkPinStates
+#if DEBUG_LEVEL == 1
   #define debug_print(x) Serial.print(x)
   #define debug_print_dec(x) Serial.print(x, DEC)
   #define debug_println(x) Serial.println(x)
@@ -47,7 +47,7 @@
 const int aLEDNum1 = 80;
 const int aLEDNum2 = 0;
 const int aLEDNum3 = 0;
-const String EFFECTFINISHED = "";
+const char* EFFECTFINISHED = "";
 pinduinoext nggPinduno(aLEDNum1, aLEDNum2, aLEDNum3, "Nano");
 
 // Button Configuration
@@ -56,7 +56,7 @@ const int BLUE_BUTTON_PIN = 7;  // D7 - Blue Button
 const unsigned long DEBOUNCE_DELAY = 50;
 const unsigned long LONG_PRESS_DURATION = 1000;  // 1s
 const unsigned long DOUBLE_CLICK_WINDOW = 1000;  // 1s
-const unsigned long BRIGHTNESS_UPDATE_INTERVAL = 15;  // 50ms
+const unsigned long BRIGHTNESS_UPDATE_INTERVAL = 15;  // 15ms
 
 // Meta-State Machine
 enum MetaGameState { NO_LED, ALL_LED, ALL_LED_RUN_ONLY, SET_BRIGHTNESS, SET_STATICCOLOR };
@@ -113,16 +113,16 @@ unsigned long lastRefreshTime = 0;
 unsigned long lastVoltageCheck = 0;
 unsigned long lastGameRunColorUpdate = 0;
 unsigned long lastBrightnessUpdate = 0;
-String currentEffectColor = "";
-String currentAttractColor = "";
+const char* currentEffectColor = "";
+const char* currentAttractColor = "";
 int attractColorIndex = 0;
-const String attractColors[] = {"green", "blue", "red"};
+const char* attractColors[] = {"green", "blue", "red"};
 bool colorsShown[3] = {false, false, false};
 uint8_t brightness = 255;  // Default brightness
 
 // Color Selection for SET_STATICCOLOR
 const int NUM_STATIC_COLORS = 13;
-const String staticColors[] = {"white", "red", "green", "blue", "yellow", "cyan", "purple", "orange", "lime", "sky", "mint", "magenta", "lavender"};
+const char* staticColors[] = {"white", "red", "green", "blue", "yellow", "cyan", "purple", "orange", "lime", "sky", "mint", "magenta", "lavender"};
 int staticColorIndex = 0;  // Start with "white"
 
 // RGB values for staticColors
@@ -134,7 +134,7 @@ uint32_t staticColorRGB[NUM_STATIC_COLORS] = {
   nggPinduno.adrLED1()->strip()->Color(255, 255, 0),   // yellow
   nggPinduno.adrLED1()->strip()->Color(0, 255, 255),   // cyan
   nggPinduno.adrLED1()->strip()->Color(128, 0, 128),   // purple
-  nggPinduno.adrLED1()->strip()->Color(255, 165, 0),   //004 orange
+  nggPinduno.adrLED1()->strip()->Color(255, 165, 0),   // orange
   nggPinduno.adrLED1()->strip()->Color(50, 205, 50),   // lime
   nggPinduno.adrLED1()->strip()->Color(135, 206, 235), // sky
   nggPinduno.adrLED1()->strip()->Color(62, 245, 180),  // mint
@@ -144,7 +144,7 @@ uint32_t staticColorRGB[NUM_STATIC_COLORS] = {
 
 // Effect and Color Tracking
 const int NUM_COLORS = 13;
-const String availableColors[] = {"red", "green", "blue", "yellow", "cyan", "purple", "white", "orange", "lime", "sky", "mint", "magenta", "lavender"};
+const char* availableColors[] = {"red", "green", "blue", "yellow", "cyan", "purple", "white", "orange", "lime", "sky", "mint", "magenta", "lavender"};
 bool colorsUsed[NUM_COLORS] = {false};
 const int NUM_J126_10_EFFECTS = 4;
 bool j126_10_effectsUsed[NUM_J126_10_EFFECTS] = {false};
@@ -154,9 +154,9 @@ const int NUM_J126_7_EFFECTS = 3;
 bool j126_7_effectsUsed[NUM_J126_7_EFFECTS] = {false};
 
 // Effect Names for Debug Output
-const String j126_10_effectNames[] = {"bullet2Color", "bulletFromPoint2Color", "spreadOutToPoint", "spreadInFromPoint2Color"};
-const String j126_9_effectNames[] = {"bullet2Color", "dataStreamNoTail2Color", "spreadInFromPoint2Color"};
-const String j126_7_effectNames[] = {"rainbowWS2812FX", "rainbowCycleWS2812FX", "spreadInFromPoint2Color"};
+const char* j126_10_effectNames[] = {"bullet2Color", "bulletFromPoint2Color", "spreadOutToPoint", "spreadInFromPoint2Color"};
+const char* j126_9_effectNames[] = {"bullet2Color", "dataStreamNoTail2Color", "spreadInFromPoint2Color"};
+const char* j126_7_effectNames[] = {"rainbowWS2812FX", "rainbowCycleWS2812FX", "spreadInFromPoint2Color"};
 
 // Method to set all LEDs to the specified color from staticColorRGB
 void setStripColor(int colorIndex) {
@@ -165,6 +165,37 @@ void setStripColor(int colorIndex) {
   }
   nggPinduno.adrLED1()->setBrightness(brightness);
   nggPinduno.adrLED1()->show(true);
+}
+
+// Debug routine for complex effects: prints start details
+void debugCheckPinStateStart(const char* effectName, const char* pinId, int effectIndex, const char* color1, const char* color2, bool color2Applicable) {
+  unsigned long startTime = millis();
+  pin_debug_print(F("[EFFECT]: "));
+  pin_debug_print(effectName ? effectName : "InvalidEffect");
+  pin_debug_print(F(" ("));
+  pin_debug_print(pinId);
+  pin_debug_print(F(", index "));
+  pin_debug_print_dec(effectIndex);
+  pin_debug_println(F(")"));
+  pin_debug_print(F("Start Time: "));
+  pin_debug_println_dec(startTime);
+  pin_debug_print(F("[COLOR] 1: Selected: "));
+  pin_debug_println(color1 ? color1 : "None");
+  pin_debug_print(F("[COLOR] 2: Selected: "));
+  if (color2Applicable) {
+    pin_debug_println(color2 ? color2 : "None");
+  } else {
+    pin_debug_println(F("N/A"));
+  }
+  Serial.flush();
+}
+
+// Debug routine for complex effects: prints end time
+void debugCheckPinStateEnd() {
+  unsigned long endTime = millis();
+  pin_debug_print(F("End Time: "));
+  pin_debug_println_dec(endTime);
+  Serial.flush();
 }
 
 void setup() {
@@ -194,10 +225,7 @@ void setup() {
 }
 
 void loop() {
-  // Update button states first to ensure responsiveness
   updateButtonStates();
-
-  // Handle meta-state
   switch (metaState) {
     case NO_LED:
       handleNoLedState();
@@ -221,7 +249,6 @@ void updateButtonStates() {
   bool redReading = digitalRead(RED_BUTTON_PIN);
   bool blueReading = digitalRead(BLUE_BUTTON_PIN);
 
-  // Red Button Debounce
   if (redReading != redButton.lastState) {
     redButton.lastDebounceTime = millis();
   }
@@ -244,7 +271,6 @@ void updateButtonStates() {
   }
   redButton.lastState = redReading;
 
-  // Blue Button Debounce
   if (blueReading != blueButton.lastState) {
     blueButton.lastDebounceTime = millis();
   }
@@ -264,13 +290,11 @@ void updateButtonStates() {
       } else {
         blueButton.isPressed = false;
         if (blueButton.isLongPressed && metaState == SET_BRIGHTNESS) {
-          // Exit SET_BRIGHTNESS
           debug_print(F("[STATE] Exiting SET_BRIGHTNESS to "));
           debug_print_var(previousMetaState);
           debug_print(F(", Brightness: "));
           debug_print_dec(brightness);
           metaState = previousMetaState;
-          // Reset blinkGreen state to prevent lingering effects
           blinkGreenState.active = false;
           if (metaState == NO_LED) {
             nggPinduno.adrLED1()->clear();
@@ -287,11 +311,9 @@ void updateButtonStates() {
   }
   blueButton.lastState = blueReading;
 
-  // Detect Red Button Double-Click
   if (redButton.clickCount > 0 && millis() - redButton.lastClickTime > DOUBLE_CLICK_WINDOW) {
     if (redButton.clickCount >= 2) {
       if (metaState == SET_STATICCOLOR) {
-        // In SET_STATICCOLOR: Reset to white
         staticColorIndex = 0;
         setStripColor(staticColorIndex);
         debug_print(F("[BUTTON] Red Double-Click in SET_STATICCOLOR: Reset to "));
@@ -300,7 +322,6 @@ void updateButtonStates() {
         debug_print_dec(staticColorIndex);
         debug_println(F(")"));
       } else {
-        // Outside SET_STATICCOLOR: Set ALL_LED, brightness 255, use selected color
         debug_print(F("[STATE] Red Double-Click: Transition to ALL_LED, Brightness: 255, Color: "));
         debug_print_var(staticColors[staticColorIndex]);
         debug_print(F(" (index "));
@@ -313,7 +334,6 @@ void updateButtonStates() {
         stateChanged = true;
       }
     } else if (redButton.clickCount == 1 && !redButton.isPressed) {
-      // Single press
       if (metaState == NO_LED) {
         debug_println(F("[STATE] Red Single Press: NO_LED -> ALL_LED"));
         metaState = ALL_LED;
@@ -336,10 +356,8 @@ void updateButtonStates() {
     redButton.clickCount = 0;
   }
 
-  // Detect Blue Button Actions
   if (blueButton.clickCount > 0 && millis() - blueButton.lastClickTime > DOUBLE_CLICK_WINDOW) {
     if (blueButton.clickCount >= 1 && !blueButton.isPressed && !blueButton.isLongPressed) {
-      // Single click (also handles double-click for SET_STATICCOLOR exit)
       if (metaState == NO_LED) {
         previousMetaState = metaState;
         metaState = SET_STATICCOLOR;
@@ -380,7 +398,6 @@ void updateButtonStates() {
     }
   }
 
-  // Detect Blue Button Long Press
   if (blueButton.isPressed && !blueButton.isLongPressed && millis() - blueButton.pressStartTime >= LONG_PRESS_DURATION) {
     blueButton.isLongPressed = true;
     if (metaState != NO_LED && metaState != SET_STATICCOLOR) {
@@ -436,14 +453,12 @@ void handleAllLedRunOnlyState() {
 }
 
 void blinkGreen(int numBlinks, bool holdAfter) {
-  // Initialize non-blocking blink sequence
   blinkGreenState.active = true;
   blinkGreenState.numBlinks = numBlinks;
   blinkGreenState.currentBlink = 0;
   blinkGreenState.holdAfter = holdAfter;
   blinkGreenState.isOn = true;
   blinkGreenState.lastUpdate = millis();
-  // Set initial LED state
   nggPinduno.adrLED1()->color("green");
   nggPinduno.adrLED1()->setBrightness(255);
   nggPinduno.adrLED1()->show(true);
@@ -454,12 +469,10 @@ void blinkGreen(int numBlinks, bool holdAfter) {
 }
 
 void handleSetBrightnessState() {
-  // Handle non-blocking blink sequence
   if (blinkGreenState.active) {
     unsigned long currentTime = millis();
     if (blinkGreenState.isOn) {
       if (currentTime - blinkGreenState.lastUpdate >= blinkGreenState.onDuration) {
-        // Turn off LEDs
         nggPinduno.adrLED1()->clear();
         nggPinduno.adrLED1()->show(true);
         blinkGreenState.isOn = false;
@@ -469,25 +482,21 @@ void handleSetBrightnessState() {
       if (currentTime - blinkGreenState.lastUpdate >= blinkGreenState.offDuration) {
         blinkGreenState.currentBlink++;
         if (blinkGreenState.currentBlink < blinkGreenState.numBlinks) {
-          // Next blink
           nggPinduno.adrLED1()->color("green");
           nggPinduno.adrLED1()->setBrightness(255);
           nggPinduno.adrLED1()->show(true);
           blinkGreenState.isOn = true;
           blinkGreenState.lastUpdate = currentTime;
         } else if (blinkGreenState.holdAfter) {
-          // Start hold
           nggPinduno.adrLED1()->color("green");
           nggPinduno.adrLED1()->setBrightness(255);
           nggPinduno.adrLED1()->show(true);
-          blinkGreenState.isOn = true; // Keep on for hold
+          blinkGreenState.isOn = true;
           blinkGreenState.lastUpdate = currentTime;
-          blinkGreenState.numBlinks = 0; // Prevent further blinks
-          blinkGreenState.onDuration = blinkGreenState.holdDuration; // Set hold duration
+          blinkGreenState.numBlinks = 0;
+          blinkGreenState.onDuration = blinkGreenState.holdDuration;
         } else {
-          // End blink sequence
           blinkGreenState.active = false;
-          // Restore red color
           nggPinduno.adrLED1()->color("red");
           nggPinduno.adrLED1()->setBrightness(brightness);
           nggPinduno.adrLED1()->show(true);
@@ -496,12 +505,9 @@ void handleSetBrightnessState() {
         }
       }
     }
-    // Handle hold phase
     if (blinkGreenState.active && blinkGreenState.holdAfter && blinkGreenState.currentBlink >= blinkGreenState.numBlinks && !blinkGreenState.numBlinks) {
       if (currentTime - blinkGreenState.lastUpdate >= blinkGreenState.holdDuration) {
-        // End hold
         blinkGreenState.active = false;
-        // Restore red color
         nggPinduno.adrLED1()->color("red");
         nggPinduno.adrLED1()->setBrightness(brightness);
         nggPinduno.adrLED1()->show(true);
@@ -510,7 +516,6 @@ void handleSetBrightnessState() {
       }
     }
   } else {
-    // Normal brightness cycling
     nggPinduno.adrLED1()->color("red");
     nggPinduno.adrLED1()->setBrightness(brightness);
     nggPinduno.adrLED1()->show(true);
@@ -520,7 +525,6 @@ void handleSetBrightnessState() {
     brightness = 1;
     lastBrightnessUpdate = millis();
     stateChanged = false;
-    // Ensure blink sequence is off at start
     blinkGreenState.active = false;
     debug_println(F("[STATE] SET_BRIGHTNESS: Started with Red, Brightness Cycling"));
   }
@@ -631,21 +635,11 @@ void checkPinStates() {
       currentState = EFFECT_ACTIVE;
       stateChanged = true;
       int effectIndex = getRandomEffect(j126_10_effectsUsed, NUM_J126_10_EFFECTS);
-      String color1 = getRandomColor();
-      String color2 = getRandomColor();
-      pin_debug_print(F("[EFFECT] J126(10) Started "));
-      if (effectIndex >= 0 && effectIndex < NUM_J126_10_EFFECTS) {
-        pin_debug_print(j126_10_effectNames[effectIndex]);
-      } else {
-        pin_debug_print(F("InvalidEffect"));
-      }
-      pin_debug_print(F(" (index "));
-      pin_debug_print_dec(effectIndex);
-      pin_debug_print(F(") with colors "));
-      pin_debug_print(color1.length() > 0 ? color1 : F("None"));
-      pin_debug_print(F(", "));
-      pin_debug_print(color2.length() > 0 ? color2 : F("None"));
-      pin_debug_println(F(""));
+      const char* color1 = getRandomColor();
+      const char* color2 = getRandomColor();
+      bool color2Applicable = (effectIndex != 2); // spreadOutToPoint uses only color1
+      const char* effectName = (effectIndex >= 0 && effectIndex < NUM_J126_10_EFFECTS) ? j126_10_effectNames[effectIndex] : "InvalidEffect";
+      debugCheckPinStateStart(effectName, "J126(10)", effectIndex, color1, color2, color2Applicable);
       switch (effectIndex) {
         case 0:
           nggPinduno.adrLED1()->bullet2Color(color1, color2, 20, 2, 1);
@@ -661,39 +655,21 @@ void checkPinStates() {
           nggPinduno.adrLED1()->spreadInFromPoint2Color(1, color1, color2, 1000);
           break;
       }
+      debugCheckPinStateEnd();
       currentState = GAME_RUN;
       stateChanged = true;
       currentEffectColor = EFFECTFINISHED;
       trigger = 1;
-      pin_debug_print(F("[EFFECT] J126(10) Completed "));
-      if (effectIndex >= 0 && effectIndex < NUM_J126_10_EFFECTS) {
-        pin_debug_print(j126_10_effectNames[effectIndex]);
-      } else {
-        pin_debug_print(F("InvalidEffect"));
-      }
-      pin_debug_print(F(" (index "));
-      pin_debug_print_dec(effectIndex);
-      pin_debug_println(F(""));
     }
     else if (metaState == ALL_LED && nggPinduno.pinState()->J126(9)) {
       currentState = EFFECT_ACTIVE;
       stateChanged = true;
       int effectIndex = getRandomEffect(j126_9_effectsUsed, NUM_J126_9_EFFECTS);
-      String color1 = getRandomColor();
-      String color2 = getRandomColor();
-      pin_debug_print(F("[EFFECT] J126(9) Started "));
-      if (effectIndex >= 0 && effectIndex < NUM_J126_9_EFFECTS) {
-        pin_debug_print(j126_9_effectNames[effectIndex]);
-      } else {
-        pin_debug_print(F("InvalidEffect"));
-      }
-      pin_debug_print(F(" (index "));
-      pin_debug_print_dec(effectIndex);
-      pin_debug_print(F(") with colors "));
-      pin_debug_print(color1.length() > 0 ? color1 : F("None"));
-      pin_debug_print(F(", "));
-      pin_debug_print(color2.length() > 0 ? color2 : F("None"));
-      pin_debug_println(F(""));
+      const char* color1 = getRandomColor();
+      const char* color2 = getRandomColor();
+      bool color2Applicable = true; // All J126(9) effects use two colors
+      const char* effectName = (effectIndex >= 0 && effectIndex < NUM_J126_9_EFFECTS) ? j126_9_effectNames[effectIndex] : "InvalidEffect";
+      debugCheckPinStateStart(effectName, "J126(9)", effectIndex, color1, color2, color2Applicable);
       switch (effectIndex) {
         case 0:
           nggPinduno.adrLED1()->bullet2Color(color1, color2, 20, 2, 1);
@@ -705,68 +681,41 @@ void checkPinStates() {
           nggPinduno.adrLED1()->spreadInFromPoint2Color(1, color1, color2, 1000);
           break;
       }
+      debugCheckPinStateEnd();
       currentState = GAME_RUN;
       stateChanged = true;
       currentEffectColor = EFFECTFINISHED;
       trigger = 1;
-      pin_debug_print(F("[EFFECT] J126(9) Completed "));
-      if (effectIndex >= 0 && effectIndex < NUM_J126_9_EFFECTS) {
-        pin_debug_print(j126_9_effectNames[effectIndex]);
-      } else {
-        pin_debug_print(F("InvalidEffect"));
-      }
-      pin_debug_print(F(" (index "));
-      pin_debug_print_dec(effectIndex);
-      pin_debug_println(F(""));
     }
     else if (metaState == ALL_LED && nggPinduno.pinState()->J126(7)) {
       currentState = EFFECT_ACTIVE;
       stateChanged = true;
       int effectIndex = getRandomEffect(j126_7_effectsUsed, NUM_J126_7_EFFECTS);
-      String color1 = getRandomColor();
+      const char* color1 = getRandomColor();
+      const char* color2 = getRandomColor(); // Selected but may not be used
+      bool color2Applicable = (effectIndex == 2); // Only spreadInFromPoint2Color uses color2
+      const char* effectName = (effectIndex >= 0 && effectIndex < NUM_J126_7_EFFECTS) ? j126_7_effectNames[effectIndex] : "InvalidEffect";
+      debugCheckPinStateStart(effectName, "J126(7)", effectIndex, color1, color2, color2Applicable);
       static int rainbow_count = 0;
-      pin_debug_print(F("[EFFECT] J126(7) Started "));
-      if (effectIndex >= 0 && effectIndex < NUM_J126_7_EFFECTS) {
-        pin_debug_print(j126_7_effectNames[effectIndex]);
-      } else {
-        pin_debug_print(F("InvalidEffect"));
-      }
-      pin_debug_print(F(" (index "));
-      pin_debug_print_dec(effectIndex);
-      pin_debug_print(F(") with color "));
-      pin_debug_print(color1.length() > 0 ? color1 : F("None"));
-      pin_debug_println(F(""));
       switch (effectIndex) {
         case 0:
           rainbow_count++;
-          pin_debug_print(F("[EFFECT] Rainbow Start at "));
-          pin_debug_println_var(millis());
           nggPinduno.adrLED1()->rainbowWS2812FX(1);
-          pin_debug_print(F("[EFFECT] Rainbow End at "));
-          pin_debug_println_var(millis());
           pin_debug_print(F("[EFFECT] Rainbow Count: "));
           pin_debug_println_var(rainbow_count);
           break;
         case 1:
-          nggPinduno.adrLED1()->rainbowCycleWS2812FX(8);
+          nggPinduno.adrLED1()->rainbowCycleWS2812FX(1);
           break;
         case 2:
-          nggPinduno.adrLED1()->spreadInFromPoint2Color(1, color1, color1, 1000);
+          nggPinduno.adrLED1()->spreadInFromPoint2Color(1, color1, color2, 1000);
           break;
       }
+      debugCheckPinStateEnd();
       currentState = GAME_RUN;
       stateChanged = true;
       currentEffectColor = EFFECTFINISHED;
       trigger = 1;
-      pin_debug_print(F("[EFFECT] J126(7) Completed "));
-      if (effectIndex >= 0 && effectIndex < NUM_J126_7_EFFECTS) {
-        pin_debug_print(j126_7_effectNames[effectIndex]);
-      } else {
-        pin_debug_print(F("InvalidEffect"));
-      }
-      pin_debug_print(F(" (index "));
-      pin_debug_print_dec(effectIndex);
-      pin_debug_println(F(""));
     }
     else if (nggPinduno.pinState()->J126(12)) {
       nggPinduno.adrLED1()->color("blue");
@@ -812,7 +761,7 @@ void checkPinStates() {
   }
 }
 
-void triggerEffect(String color, String pin) {
+void triggerEffect(const char* color, const char* pin) {
   currentState = EFFECT_ACTIVE;
   stateChanged = true;
   currentEffectColor = color;
@@ -823,7 +772,7 @@ void triggerEffect(String color, String pin) {
   pin_debug_println_var(color);
 }
 
-String getRandomColor() {
+const char* getRandomColor() {
   bool allUsed = true;
   for (int i = 0; i < NUM_COLORS; i++) {
     if (!colorsUsed[i]) {
