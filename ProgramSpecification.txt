@@ -1,52 +1,6 @@
 Here is the specification
-The game has 3 states
-- ATTRACT: attract if no game is runing, currently called bg_on, please rename this mode to ATTRACT
-- GAME_RUN: running game - no effect is triggered or currently running
-- EFFECT_ACTIVE: running game - effect is triggered with according led animation
-      simple effects like setting a color to red, green blue etc. stays for 2 seconds, please ensure for simple effects that they stay for 2 seconds
-	  complex effects are blocking and run as long as it takes
-	  
-in GAME_RUN state I want the led stripe to constantly show a 128,128,128 color
-please implement those states with a state machine
-
-
-The program starts in ATTRACT mode
-The program shows the attract color 5 seconds then changes it.
-it cycles through each attract color exactly once in random order before repeating
-those are the attract colors green, blue, red
-
-can you please modify the programm accordingly
-
-
-can you please assign according the following description for each J126(x) the according effects listed under each J126(x) event
-Please write the pogram so that everytime the J126(x) is triggred an effect is dynamically choosen from the according J126(x) list. 
-Each effect is used once until each effect for each J126(x) is unsed once
-Please assign dynmaically and randomly the following colors to the dynamcially chosen effect: red, green, blue, yellow, cyan, purple, white, orange, lime, sky, mint, magenta, lavender 
-until each color is used once then start using them again
-Please leave the other parameters as provided in the specification, just replace the colors. The colors are the string parameter values in ""
-
-J126(10)
-	nggPinduno.adrLED1()->bullet2Color("green", "red", 20, 2, 1); // Blocking
-	nggPinduno.adrLED1()->bulletFromPoint2Color("white", "white", 5, 2, 75);	
-	nggPinduno.adrLED1()->spreadOutToPoint(0,255, 0, 0, 300);
-	nggPinduno.adrLED1()->spreadInFromPoint2Color (1, "red", "orange", 500); 
-
-J126(9)) {
-      nggPinduno.adrLED1()->bullet2Color("green", "red", 20, 2, 1); // Blocking
-      nggPinduno.adrLED1()->dataStreamNoTail2Color("blue", "mint", 20, 20, 1);
-	  nggPinduno.adrLED1()->spreadInFromPoint2Color (1, "red", "orange", 500); 
-J126(7)
-	nggPinduno.adrLED1()->rainbow(1); 
-	nggPinduno.adrLED1()->rainbowCycle(1)  
-	nggPinduno.adrLED1()->spreadInFromPoint2RGB (1, 50,50,50, 0,0,255, 300); 
-
-
-
-Button
-Please enhance the following program by this specification:
-The current states remain as they are the new states have to be incorperated correctly to the existing states. They are like a layer above the existing states.
-There are two simple press buttons to be observed. Their status is: Pressed/Not Pressed. Those are the hardware buttons: ttps://www.bastelgarage.ch/m5stack-mini-dual-button-unit?search=m5stack%20mini%20dual%20button%20unit
-Button connection to Arduino Nano	
+The game has the following meta states with substates intended
+State Machine
 	Red Button connected to D6
 	Blue Button connected to D7
 	We have the following meta states:
@@ -54,50 +8,99 @@ Button connection to Arduino Nano
 	ALL_LED	//Full LED Features available according the following indented substates
 		With substates
 			ATTRACT //When the game is not running
+					//The program shows the attract color 5 seconds then changes it.
+					//it cycles through each attract color exactly once in random order before repeating
+					//those are the attract colors green, blue, red
 			GAME_RUN //Game is runnuing but no effect is active - LED color is set to the one chosen by SET_STATICCOLOR or if not set to the default  first one in the list: "white"
-			EFFECT_ACTIVE //effect is trigered by J126(x)		
+			EFFECT_ACTIVE //effect is trigered by J126(x), with according led animation
+					simple effects like setting a color to red, green blue etc. stays for 2 seconds, please ensure for simple effects that they stay for 2 seconds
+					complex effects (J126(10), J126(9), J126(7)) are blocking and run as long as it takes		
 	ALL_LED_RUN_ONLY - only static playfield lightning
 		With substate
 			GAME_RUN - only static playfield lightning
 	SET_BRIGHTNESS	- set the global Brightness for all Modes where LEDs are on
 	SET_STATICCOLOR	- set the color for ALL_LED_RUN_ONLY, GAME_RUN
-	
-	
-	
-Per default, when the program starts, the Game State is NO_LED which means game is not in  ATTRACT, GAME_RUN, EFFECT_ACTIVE state. 
-	NO_LED means the led stripe is off - dark
-The following Events must be handled properly
-	1. Red Button Pressed toggles Game States between meta state NO_LED/ALL_LED
-		ALL_LED means the game can enter all states ATTRACT, GAME_RUN, EFFECT_ACTIVE
-		NO_LED means game cannot enter any of those states ATTRACT, GAME_RUN, EFFECT_ACTIVE,  the led stripe is off - dark
-	2. Blue Button pressed
-		If the blue button is pressed and the game is in state ALL_LED this button toggles between
-			- ALL_LED -> game can enter all states ATTRACT, GAME_RUN, EFFECT_ACTIVE 
-			- ALL_LED_RUN_ONLY -> game will immediatley enter GAME_RUN state where the LED will be light with the color selected in state SET_STATICCOLOR
-		IF the game  is in state NO_LED please see 5. SET_STATICCOLOR
-	3. Blue button long pressed, longer then one second game enters in state	
-		SET_BRIGHTNESS
-			when entering SET_BRIGHTNESS state the led strip color is set to red
-			a counter starts after one second, the counter variable is called brightness. 
-			The counter is incremented every 50ms until 255 is reached, then it starts again at one.
-			Every time the counter is increased the brightness of the LED stripe is set to the according brightness value
-			This continues until the button is released again. The current value is then saved.
-			When the  button is released the games goes back to it's previous state
-			When brightness value of 200 is reached blink one time in color green: 1 second on 200ms off, block other code execution during blink, then continue with SET_BRIGHTNESS
-			When brightness value of 230 is reached blink 2 times in color green: 1 second on, 200ms offblock other code execution during this period, then continue with SET_BRIGHTNESS
-			When brightness value of 255 is reached blink 3 times in green, 1 second on, 200ms off, then turn on leds for 3 seconds in green block other code execution during this period,, then continue with SET_BRIGHTNESS  
-			
-	4. Red Button double click - two clicks within one second when NOT in state SET_STATICCOLOR:
-		The game immediately goes to ALL_LED state, the brightness is set to 255 and the color the one selected in SET_STATICCOLOR
-		
-	5. SET_STATICCOLOR: When system is in meta-state NO_LED and the blue button (D7) is pressed: The system changes to New meta_state SET_STATICCOLOR
-		Red Button Single Click: Cycle through a predefined list of colors ({"white", "red", "green", "blue", "yellow", "cyan", "purple", "orange", "lime", "sky", "mint", "magenta", "lavender"}), starting with the first entry (white). At the end of the list, restart with white.
-			Selected Color Usage: The chosen color becomes the static color for:
-				-	The ALL_LED_RUN_ONLY meta-state (applied in the GAME_RUN state).
-				-	The ALL_LED meta-state when in the GAME_RUN state (but not in ATTRACT or EFFECT_ACTIVE, which retain their existing behavior).
 
-		Blue button click in the state SET_STATICCOLOR:  Exits the meta-state SET_STATICCOLOR and returns to the previous meta-state before the transition to SET_STATICCOLOR
-		Red button double click in state SET_STATICCOLOR: resets the color list index and sets it the the first color
+	The program starts in NO_LED mode
+		
+Complex Effect selection
+	can you please assign according the following description for each J126(x) the according effects listed under each J126(x) event
+	Please write the pogram so that everytime the J126(x) is triggred an effect is dynamically choosen from the according J126(x) list. 
+	Each effect is used once until each effect for each J126(x) is unsed once
+	Please assign dynmaically and randomly the following colors to the dynamcially chosen effect: red, green, blue, yellow, cyan, purple, white, orange, lime, sky, mint, magenta, lavender 
+	until each color is used once then start using them again
+	Please leave the other parameters as provided in the specification, just replace the colors. The colors are the string parameter values in ""
+
+	J126(10)
+		1. nggPinduno.adrLED1()->bullet2Color(color1, color2, 20, 2, 1); // Blocking
+		2. nggPinduno.adrLED1()->bulletFromPoint2Color(color1, color2, 17, 5, 17);//Blocking
+		3. nggPinduno.adrLED1()->color(color1);
+		3. nggPinduno.adrLED1()->spreadOutToPoint(0, 1600);//Blocking
+		nggPinduno.adrLED1()->spreadInFromPoint2Color(1, color1, color2, 1000); //Blocking
+
+	J126(9)) {
+		  nggPinduno.adrLED1()->bullet2Color("color1", color2red", 20, 2, 1); // Blocking
+		  nggPinduno.adrLED1()->dataStreamNoTail2Color("color1", "color2", 20, 20, 1);
+		  nggPinduno.adrLED1()->spreadInFromPoint2Color (1, "color1", "color2", 500); 
+	J126(7)
+		nggPinduno.adrLED1()->rainbowWS2812FX(1); 
+		nggPinduno.adrLED1()->rainbowCycleWS2812FX(1)  
+		nggPinduno.adrLED1()->spreadInFromPoint2Color(1, color1, color2, 1000);
+
+Simple Effect color selection
+	Please assign a random color from the list staticColors the the following simple effects. Please use each color once until each is used.
+	Please maintain a seperate list to track the colors used for Simple Effects.
+		J126(12)
+		J126(11)
+		J126(6)
+		J126(5)
+		J126(4)
+	
+Button Events
+	Please enhance the following program by this specification:
+	The current states remain as they are the new states have to be incorperated correctly to the existing states. They are like a layer above the existing states.
+	There are two simple press buttons to be observed. Their status is: Pressed/Not Pressed. Those are the hardware buttons: ttps://www.bastelgarage.ch/m5stack-mini-dual-button-unit?search=m5stack%20mini%20dual%20button%20unit
+	Button connection to Arduino Nano	
+		Red Button connected to D6
+		Blue Button connected to D7
+		We have the following meta states:
+			as described in the chapter State Machine above
+		
+		
+	Per default, when the program starts, the Game State is NO_LED which means game is not in  ATTRACT, GAME_RUN, EFFECT_ACTIVE state. 
+		NO_LED means the led stripe is off - dark
+	The following Events must be handled properly
+		1. Red Button Pressed toggles Game States between meta state NO_LED/ALL_LED
+			ALL_LED means the game can enter all states ATTRACT, GAME_RUN, EFFECT_ACTIVE
+			NO_LED means game cannot enter any of those states ATTRACT, GAME_RUN, EFFECT_ACTIVE,  the led stripe is off - dark
+		2. Blue Button pressed
+			If the blue button is pressed and the game is in state ALL_LED this button toggles between
+				- ALL_LED -> game can enter all states ATTRACT, GAME_RUN, EFFECT_ACTIVE 
+				- ALL_LED_RUN_ONLY -> game will immediatley enter GAME_RUN state where the LED will be light with the color selected in state SET_STATICCOLOR
+			IF the game  is in state NO_LED please see 5. SET_STATICCOLOR
+		3. Blue button long pressed, longer then one second game enters in state	
+			SET_BRIGHTNESS
+				when entering SET_BRIGHTNESS state the led strip color is set to red
+				a counter starts after one second, the counter variable is called brightness. 
+				The counter is incremented every 50ms until 255 is reached, then it starts again at one.
+				Every time the counter is increased the brightness of the LED stripe is set to the according brightness value
+				This continues until the button is released again. The current value is then saved.
+				When the  button is released the games goes back to it's previous state
+				When brightness value of 200 is reached blink one time in color green: 1 second on 200ms off, block other code execution during blink, then continue with SET_BRIGHTNESS
+				When brightness value of 230 is reached blink 2 times in color green: 1 second on, 200ms offblock other code execution during this period, then continue with SET_BRIGHTNESS
+				When brightness value of 255 is reached blink 3 times in green, 1 second on, 200ms off, then turn on leds for 3 seconds in green block other code execution during this period,, then continue with SET_BRIGHTNESS  
+				
+		4. Red Button double click - two clicks within one second when NOT in state SET_STATICCOLOR:
+			The game immediately goes to ALL_LED state, the brightness is set to 255 and the color the one selected in SET_STATICCOLOR
+			
+		5. SET_STATICCOLOR: When system is in meta-state NO_LED and the blue button (D7) is pressed: The system changes to New meta_state SET_STATICCOLOR
+			Red Button Single Click: Cycle through a predefined list of colors ({"white", "red", "green", "blue", "yellow", "cyan", "purple", "orange", "lime", "sky", "mint", "magenta", "lavender"}), starting with the first entry (white). At the end of the list, restart with white.
+				Selected Color Usage: The chosen color becomes the static color for:
+					-	The ALL_LED_RUN_ONLY meta-state (applied in the GAME_RUN state).
+					-	The ALL_LED meta-state when in the GAME_RUN state (but not in ATTRACT or EFFECT_ACTIVE, which retain their existing behavior).
+
+			Blue button click in the state SET_STATICCOLOR:  Exits the meta-state SET_STATICCOLOR and returns to the previous meta-state before the transition to SET_STATICCOLOR
+			Red button double click in state SET_STATICCOLOR: resets the color list index and sets it the the first color
 		
 		
 
