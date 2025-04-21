@@ -1,7 +1,7 @@
 #include "pinduinoext.h"
 
 // Debug Configuration
-#define DEBUG_LEVEL 0  // 0: Off, 1: Full, 2: Only checkPinStates
+#define DEBUG_LEVEL 2  // 0: Off, 1: Full, 2: Only checkPinStates
 #if DEBUG_LEVEL == 1
   #define debug_print(x) Serial.print(x)
   #define debug_print_dec(x) Serial.print(x, DEC)
@@ -172,7 +172,9 @@ const char* j126_7_effectNames[] = {
 
 // Method to set all LEDs to the specified color
 void setStripColor(int colorIndex) {
-  nggPinduno.adrLED1()->strip()->fill(staticColorRGB[colorIndex], 0, aLEDNum1);
+  for (int i = 0; i < aLEDNum1; i++) {
+    nggPinduno.adrLED1()->strip()->setPixelColor(i, staticColorRGB[colorIndex]);
+  }
   nggPinduno.adrLED1()->setBrightness(brightness);
   nggPinduno.adrLED1()->show(true);
   currentStaticColorIndex = colorIndex;
