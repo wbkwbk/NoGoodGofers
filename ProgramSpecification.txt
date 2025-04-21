@@ -49,7 +49,7 @@ Complex Effect selection
 
 Simple Effect color selection
 	Please assign a random color from the list staticColors the the following simple effects. Please use each color once until each is used.
-	Please maintain a seperate list to track the colors used for Simple Effects.
+	Please maintain a separate  list to track the colors used for Simple Effects.
 		J126(12)
 		J126(11)
 		J126(6)
