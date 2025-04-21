@@ -121,12 +121,11 @@ bool colorsShown[3] = {false, false, false};
 uint8_t brightness = 255;  // Default brightness
 
 // Color Selection for SET_STATICCOLOR
-const int NUM_STATIC_COLORS = 13;
-const char* staticColors[] = {"white", "red", "green", "blue", "yellow", "cyan", "purple", "orange", "lime", "sky", "mint", "magenta", "lavender"};
+const int NUM_COLORS = 13;
 int staticColorIndex = 0;  // Start with "white"
 
-// RGB values for staticColors
-uint32_t staticColorRGB[NUM_STATIC_COLORS] = {
+// RGB values for availableColors
+uint32_t staticColorRGB[NUM_COLORS] = {
   nggPinduno.adrLED1()->strip()->Color(255, 255, 255), // white
   nggPinduno.adrLED1()->strip()->Color(255, 0, 0),     // red
   nggPinduno.adrLED1()->strip()->Color(0, 255, 0),     // green
@@ -143,18 +142,13 @@ uint32_t staticColorRGB[NUM_STATIC_COLORS] = {
 };
 
 // Effect and Color Tracking
-const int NUM_COLORS = 13;
-const char* availableColors[] = {"red", "green", "blue", "yellow", "cyan", "purple", "white", "orange", "lime", "sky", "mint", "magenta", "lavender"};
-bool colorsUsed[NUM_COLORS] = {false};
+const char* availableColors[] = {"white", "red", "green", "blue", "yellow", "cyan", "purple", "orange", "lime", "sky", "mint", "magenta", "lavender"};
 const int NUM_J126_10_EFFECTS = 4;
 bool j126_10_effectsUsed[NUM_J126_10_EFFECTS] = {false};
 const int NUM_J126_9_EFFECTS = 3;
 bool j126_9_effectsUsed[NUM_J126_9_EFFECTS] = {false};
 const int NUM_J126_7_EFFECTS = 3;
 bool j126_7_effectsUsed[NUM_J126_7_EFFECTS] = {false};
-
-// NEW: Tracking for Simple Effect Colors
-bool simpleEffectColorsUsed[NUM_STATIC_COLORS] = {false};
 
 // Effect Names for Debug Output
 const char* j126_10_effectNames[] = {"bullet2Color", "bulletFromPoint2Color", "spreadOutToPoint", "spreadInFromPoint2Color"};
@@ -320,13 +314,13 @@ void updateButtonStates() {
         staticColorIndex = 0;
         setStripColor(staticColorIndex);
         debug_print(F("[BUTTON] Red Double-Click in SET_STATICCOLOR: Reset to "));
-        debug_print_var(staticColors[staticColorIndex]);
+        debug_print_var(availableColors[staticColorIndex]);
         debug_print(F(" (index "));
         debug_print_dec(staticColorIndex);
         debug_println(F(")"));
       } else {
         debug_print(F("[STATE] Red Double-Click: Transition to ALL_LED, Brightness: 255, Color: "));
-        debug_print_var(staticColors[staticColorIndex]);
+        debug_print_var(availableColors[staticColorIndex]);
         debug_print(F(" (index "));
         debug_print_dec(staticColorIndex);
         debug_println(F(")"));
@@ -347,10 +341,10 @@ void updateButtonStates() {
         nggPinduno.adrLED1()->show(true);
         currentEffectColor = EFFECTFINISHED;
       } else if (metaState == SET_STATICCOLOR) {
-        staticColorIndex = (staticColorIndex + 1) % NUM_STATIC_COLORS;
+        staticColorIndex = (staticColorIndex + 1) % NUM_COLORS;
         setStripColor(staticColorIndex);
         debug_print(F("[BUTTON] Red Single Press: Cycling to "));
-        debug_print_var(staticColors[staticColorIndex]);
+        debug_print_var(availableColors[staticColorIndex]);
         debug_print(F(" (index "));
         debug_print_dec(staticColorIndex);
         debug_println(F(")"));
@@ -382,7 +376,7 @@ void updateButtonStates() {
         debug_print(F("[STATE] Blue Press: Exiting SET_STATICCOLOR to "));
         debug_print_var(previousMetaState);
         debug_print(F(", Color: "));
-        debug_print_var(staticColors[staticColorIndex]);
+        debug_print_var(availableColors[staticColorIndex]);
         debug_print(F(" (index "));
         debug_print_dec(staticColorIndex);
         debug_println(F(")"));
@@ -563,7 +557,7 @@ void handleSetStaticColorState() {
   setStripColor(staticColorIndex);
   if (stateChanged) {
     debug_print(F("[STATE] SET_STATICCOLOR: Showing "));
-    debug_print_var(staticColors[staticColorIndex]);
+    debug_print_var(availableColors[staticColorIndex]);
     debug_print(F(" (index "));
     debug_print_dec(staticColorIndex);
     debug_println(F(")"));
@@ -594,7 +588,7 @@ void handleGameRunState() {
   if (stateChanged) {
     stateChanged = false;
     debug_print(F("[STATE] GAME_RUN: Using static color "));
-    debug_print_var(staticColors[staticColorIndex]);
+    debug_print_var(availableColors[staticColorIndex]);
     debug_print(F(" (index "));
     debug_print_dec(staticColorIndex);
     debug_println(F(")"));
@@ -638,8 +632,8 @@ void checkPinStates() {
       currentState = EFFECT_ACTIVE;
       stateChanged = true;
       int effectIndex = getRandomEffect(j126_10_effectsUsed, NUM_J126_10_EFFECTS);
-      const char* color1 = getRandomColor();
-      const char* color2 = getRandomColor();
+      const char* color1 = getRandomColor(false); // Complex effect
+      const char* color2 = getRandomColor(false); // Complex effect
       bool color2Applicable = (effectIndex != 2); // spreadOutToPoint uses only color1
       const char* effectName = (effectIndex >= 0 && effectIndex < NUM_J126_10_EFFECTS) ? j126_10_effectNames[effectIndex] : "InvalidEffect";
       debugCheckPinStateStart(effectName, "J126(10)", effectIndex, color1, color2, color2Applicable);
@@ -655,7 +649,7 @@ void checkPinStates() {
           nggPinduno.adrLED1()->spreadOutToPoint(0, 1600);
           break;
         case 3:
-          nggPinduno.adrLED1()->spreadInFromPoint2Color(1, color1, color2, 1000);
+          nggPinduno.adrLED1()->spreadInFromPoint2Color(1, color1, color2, 1007421);
           break;
       }
       debugCheckPinStateEnd();
@@ -668,8 +662,8 @@ void checkPinStates() {
       currentState = EFFECT_ACTIVE;
       stateChanged = true;
       int effectIndex = getRandomEffect(j126_9_effectsUsed, NUM_J126_9_EFFECTS);
-      const char* color1 = getRandomColor();
-      const char* color2 = getRandomColor();
+      const char* color1 = getRandomColor(false); // Complex effect
+      const char* color2 = getRandomColor(false); // Complex effect
       bool color2Applicable = true; // All J126(9) effects use two colors
       const char* effectName = (effectIndex >= 0 && effectIndex < NUM_J126_9_EFFECTS) ? j126_9_effectNames[effectIndex] : "InvalidEffect";
       debugCheckPinStateStart(effectName, "J126(9)", effectIndex, color1, color2, color2Applicable);
@@ -694,8 +688,8 @@ void checkPinStates() {
       currentState = EFFECT_ACTIVE;
       stateChanged = true;
       int effectIndex = getRandomEffect(j126_7_effectsUsed, NUM_J126_7_EFFECTS);
-      const char* color1 = getRandomColor();
-      const char* color2 = getRandomColor(); // Selected but may not be used
+      const char* color1 = getRandomColor(false); // Complex effect
+      const char* color2 = getRandomColor(false); // Complex effect, may not be used
       bool color2Applicable = (effectIndex == 2); // Only spreadInFromPoint2Color uses color2
       const char* effectName = (effectIndex >= 0 && effectIndex < NUM_J126_7_EFFECTS) ? j126_7_effectNames[effectIndex] : "InvalidEffect";
       debugCheckPinStateStart(effectName, "J126(7)", effectIndex, color1, color2, color2Applicable);
@@ -721,31 +715,31 @@ void checkPinStates() {
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(12)) {
-      const char* color = getRandomSimpleEffectColor();
+      const char* color = getRandomColor(true); // Simple effect
       nggPinduno.adrLED1()->color(color);
       triggerEffect(color, "J126(12)");
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(11)) {
-      const char* color = getRandomSimpleEffectColor();
+      const char* color = getRandomColor(true); // Simple effect
       nggPinduno.adrLED1()->color(color);
       triggerEffect(color, "J126(11)");
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(6)) {
-      const char* color = getRandomSimpleEffectColor();
+      const char* color = getRandomColor(true); // Simple effect
       nggPinduno.adrLED1()->color(color);
       triggerEffect(color, "J126(6)");
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(5)) {
-      const char* color = getRandomSimpleEffectColor();
+      const char* color = getRandomColor(true); // Simple effect
       nggPinduno.adrLED1()->color(color);
       triggerEffect(color, "J126(5)");
       trigger = 1;
     }
     else if (nggPinduno.pinState()->J126(4)) {
-      const char* color = getRandomSimpleEffectColor();
+      const char* color = getRandomColor(true); // Simple effect
       nggPinduno.adrLED1()->color(color);
       triggerEffect(color, "J126(4)");
       trigger = 1;
@@ -780,7 +774,17 @@ void triggerEffect(const char* color, const char* pin) {
   pin_debug_println_var(color);
 }
 
-const char* getRandomColor() {
+// Unified function to get a random color, with static tracking arrays
+const char* getRandomColor(bool isSimpleEffect) {
+  static bool ComplexEffectscolorsUsed[NUM_COLORS] = {false};
+  static bool simpleEffectColorsUsed[NUM_COLORS] = {false};
+  //identical alternative reference approach  
+  //bool (&colorsUsed)[NUM_COLORS] = isSimpleEffect ? simpleEffectColorsUsed : ComplexEffectscolorsUsed;
+  //identical pointer approach
+  bool* colorsUsed = isSimpleEffect ? simpleEffectColorsUsed : ComplexEffectscolorsUsed;
+  const char* effectType = isSimpleEffect ? "Simple Effect" : "Complex Effect";
+
+  // Check if all colors are used
   bool allUsed = true;
   for (int i = 0; i < NUM_COLORS; i++) {
     if (!colorsUsed[i]) {
@@ -788,12 +792,18 @@ const char* getRandomColor() {
       break;
     }
   }
+
+  // Reset tracking if all colors are used
   if (allUsed) {
     for (int i = 0; i < NUM_COLORS; i++) {
       colorsUsed[i] = false;
     }
-    pin_debug_println(F("[COLOR] All Colors Used, Resetting Color Tracking"));
+    pin_debug_print(F("[COLOR] All "));
+    pin_debug_print(effectType);
+    pin_debug_println(F(" Colors Used, Resetting Color Tracking"));
   }
+
+  // Collect available color indices
   int availableCount = 0;
   int availableIndices[NUM_COLORS];
   for (int i = 0; i < NUM_COLORS; i++) {
@@ -801,53 +811,25 @@ const char* getRandomColor() {
       availableIndices[availableCount++] = i;
     }
   }
+
+  // Select a random available color
   if (availableCount > 0) {
     int selectedIndex = availableIndices[random(availableCount)];
     colorsUsed[selectedIndex] = true;
-    pin_debug_print(F("[COLOR] Selected: "));
+    pin_debug_print(F("[COLOR] "));
+    pin_debug_print(effectType);
+    pin_debug_print(F(" Selected: "));
     pin_debug_print_var(availableColors[selectedIndex]);
     pin_debug_print(F(" (index "));
     pin_debug_print_dec(selectedIndex);
     pin_debug_println(F(")"));
     return availableColors[selectedIndex];
   }
-  pin_debug_println(F("[COLOR] No Colors Available, Defaulting to white"));
-  return "white";
-}
 
-// NEW: Function to get random color for simple effects
-const char* getRandomSimpleEffectColor() {
-  bool allUsed = true;
-  for (int i = 0; i < NUM_STATIC_COLORS; i++) {
-    if (!simpleEffectColorsUsed[i]) {
-      allUsed = false;
-      break;
-    }
-  }
-  if (allUsed) {
-    for (int i = 0; i < NUM_STATIC_COLORS; i++) {
-      simpleEffectColorsUsed[i] = false;
-    }
-    pin_debug_println(F("[COLOR] All Simple Effect Colors Used, Resetting Simple Effect Color Tracking"));
-  }
-  int availableCount = 0;
-  int availableIndices[NUM_STATIC_COLORS];
-  for (int i = 0; i < NUM_STATIC_COLORS; i++) {
-    if (!simpleEffectColorsUsed[i]) {
-      availableIndices[availableCount++] = i;
-    }
-  }
-  if (availableCount > 0) {
-    int selectedIndex = availableIndices[random(availableCount)];
-    simpleEffectColorsUsed[selectedIndex] = true;
-    pin_debug_print(F("[COLOR] Simple Effect Selected: "));
-    pin_debug_print_var(staticColors[selectedIndex]);
-    pin_debug_print(F(" (index "));
-    pin_debug_print_dec(selectedIndex);
-    pin_debug_println(F(")"));
-    return staticColors[selectedIndex];
-  }
-  pin_debug_println(F("[COLOR] No Simple Effect Colors Available, Defaulting to white"));
+  // Default to white if no colors are available
+  pin_debug_print(F("[COLOR] No "));
+  pin_debug_print(effectType);
+  pin_debug_println(F(" Colors Available, Defaulting to white"));
   return "white";
 }
 
