@@ -649,7 +649,7 @@ void checkPinStates() {
           nggPinduno.adrLED1()->spreadOutToPoint(0, 1600);
           break;
         case 3:
-          nggPinduno.adrLED1()->spreadInFromPoint2Color(1, color1, color2, 1007421);
+          nggPinduno.adrLED1()->spreadInFromPoint2Color(1, color1, color2, 1000);
           break;
       }
       debugCheckPinStateEnd();
