@@ -50,6 +50,9 @@ const int aLEDNum3 = 0;
 const char* EFFECTFINISHED = "";
 pinduinoext nggPinduno(aLEDNum1, aLEDNum2, aLEDNum3, "Nano");
 
+// New Constant for Maximum White Brightness
+const uint8_t MAXWHITEBRIGHTNESS = 190; // Maximum brightness for white to avoid overloading the RD-65A
+
 // Button Configuration
 const int RED_BUTTON_PIN = 6;   // D6 - Red Button
 const int BLUE_BUTTON_PIN = 7;  // D7 - Blue Button
@@ -88,7 +91,6 @@ const unsigned long effectDuration = 2000;
 const unsigned long attractColorDuration = 5000;
 const unsigned long attractTimeout = 20000;
 const unsigned long minRefreshInterval = 50;
-const unsigned long voltageCheckInterval = 5000;
 
 // Blink Green State
 struct BlinkGreenState {
@@ -109,8 +111,6 @@ BlinkGreenState blinkGreenState = {false, 0, 0, false, false, 0, 1000, 200, 3000
 unsigned long timeLastEvent = 0;
 unsigned long lastColorChangeTime = 0;
 unsigned long effectStartTime = 0;
-unsigned long lastRefreshTime = 0;
-unsigned long lastVoltageCheck = 0;
 unsigned long lastGameRunColorUpdate = 0;
 unsigned long lastBrightnessUpdate = 0;
 const char* currentEffectColor = "";
@@ -119,6 +119,7 @@ int attractColorIndex = 0;
 const char* attractColors[] = {"green", "blue", "red"};
 bool colorsShown[3] = {false, false, false};
 uint8_t brightness = 255;  // Default brightness
+uint8_t previousBrightness = 255; // Variable to store brightness before switching to white
 
 // Color Selection for SET_STATICCOLOR
 const int NUM_COLORS = 13;
@@ -155,8 +156,24 @@ const char* j126_10_effectNames[] = {"bullet2Color", "bulletFromPoint2Color", "s
 const char* j126_9_effectNames[] = {"bullet2Color", "dataStreamNoTail2Color", "spreadInFromPoint2Color"};
 const char* j126_7_effectNames[] = {"rainbowWS2812FX", "rainbowCycleWS2812FX", "spreadInFromPoint2Color"};
 
-// Method to set all LEDs to the specified color from staticColorRGB
+// Modified Method to set all LEDs to the specified color from staticColorRGB
 void setStripColor(int colorIndex) {
+  // Check if the selected color is white (index 0)
+  if (colorIndex == 0) { // White is at index 0 in availableColors
+    previousBrightness = brightness; // Store the current brightness
+    brightness = MAXWHITEBRIGHTNESS; // Set brightness to MAXWHITEBRIGHTNESS for white
+    debug_print(F("[BRIGHTNESS] White selected, setting brightness to MAXWHITEBRIGHTNESS: "));
+    debug_println_dec(brightness);
+  } else {
+    // If not white, restore the previous brightness if it was changed
+    if (brightness == MAXWHITEBRIGHTNESS) {
+      brightness = previousBrightness; // Restore the previous brightness
+      debug_print(F("[BRIGHTNESS] Non-white color selected, restoring brightness to: "));
+      debug_println_dec(brightness);
+    }
+  }
+
+  // Set the color for all LEDs
   for (int i = 0; i < aLEDNum1; i++) {
     nggPinduno.adrLED1()->strip()->setPixelColor(i, staticColorRGB[colorIndex]);
   }
@@ -778,9 +795,6 @@ void triggerEffect(const char* color, const char* pin) {
 const char* getRandomColor(bool isSimpleEffect) {
   static bool ComplexEffectscolorsUsed[NUM_COLORS] = {false};
   static bool simpleEffectColorsUsed[NUM_COLORS] = {false};
-  //identical alternative reference approach  
-  //bool (&colorsUsed)[NUM_COLORS] = isSimpleEffect ? simpleEffectColorsUsed : ComplexEffectscolorsUsed;
-  //identical pointer approach
   bool* colorsUsed = isSimpleEffect ? simpleEffectColorsUsed : ComplexEffectscolorsUsed;
   const char* effectType = isSimpleEffect ? "Simple Effect" : "Complex Effect";
 
