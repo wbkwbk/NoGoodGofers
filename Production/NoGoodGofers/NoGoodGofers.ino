@@ -51,7 +51,7 @@ const char* EFFECTFINISHED = "";
 pinduinoext nggPinduno(aLEDNum1, aLEDNum2, aLEDNum3, "Nano");
 
 // New Constant for Maximum White Brightness
-const uint8_t MAXWHITEBRIGHTNESS = 190; // Maximum brightness for white to avoid overloading the RD-65A
+const uint8_t MAXWBRIGHTNESS_PREVENT_PS_OVERLOAD = 190; // Maximum brightness for certain colors to avoid overloading the RD-65A
 
 // Button Configuration
 const int RED_BUTTON_PIN = 6;   // D6 - Red Button
@@ -158,17 +158,19 @@ const char* j126_7_effectNames[] = {"rainbowWS2812FX", "rainbowCycleWS2812FX", "
 
 // Modified Method to set all LEDs to the specified color from staticColorRGB
 void setStripColor(int colorIndex) {
-  // Check if the selected color is white (index 0)
-  if (colorIndex == 0) { // White is at index 0 in availableColors
+  // Check if the selected color requires brightness limiting (white, sky, mint, lavender)
+  if (colorIndex == 0 || colorIndex == 9 || colorIndex == 10 || colorIndex == 12) { // white, sky, mint, lavender
     previousBrightness = brightness; // Store the current brightness
-    brightness = MAXWHITEBRIGHTNESS; // Set brightness to MAXWHITEBRIGHTNESS for white
-    debug_print(F("[BRIGHTNESS] White selected, setting brightness to MAXWHITEBRIGHTNESS: "));
+    brightness = MAXWBRIGHTNESS_PREVENT_PS_OVERLOAD; // Set brightness to MAXWBRIGHTNESS_PREVENT_PS_OVERLOAD
+    debug_print(F("[BRIGHTNESS] High-current color ("));
+    debug_print_var(availableColors[colorIndex]);
+    debug_print(F(") selected, setting brightness to MAXWBRIGHTNESS_PREVENT_PS_OVERLOAD: "));
     debug_println_dec(brightness);
   } else {
-    // If not white, restore the previous brightness if it was changed
-    if (brightness == MAXWHITEBRIGHTNESS) {
+    // If not a high-current color, restore the previous brightness if it was changed
+    if (brightness == MAXWBRIGHTNESS_PREVENT_PS_OVERLOAD) {
       brightness = previousBrightness; // Restore the previous brightness
-      debug_print(F("[BRIGHTNESS] Non-white color selected, restoring brightness to: "));
+      debug_print(F("[BRIGHTNESS] Non-high-current color selected, restoring brightness to: "));
       debug_println_dec(brightness);
     }
   }
